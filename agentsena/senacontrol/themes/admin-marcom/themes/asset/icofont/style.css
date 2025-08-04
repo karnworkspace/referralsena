@@ -1,0 +1,268 @@
+@font-face {
+  font-family: 'senaiconfont';
+  src:  url('fonts/senaiconfont.eot?3eyjjh');
+  src:  url('fonts/senaiconfont.eot?3eyjjh#iefix') format('embedded-opentype'),
+    url('fonts/senaiconfont.ttf?3eyjjh') format('truetype'),
+    url('fonts/senaiconfont.woff?3eyjjh') format('woff'),
+    url('fonts/senaiconfont.svg?3eyjjh#senaiconfont') format('svg');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+[class^="sena-ic--"], [class*=" sena-ic--"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'senaiconfont' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.sena-ic--exclamation:before {
+  content: "\e94f";
+}
+.sena-ic--iconfinder_fullscreen_alt_118669:before {
+  content: "\e94e";
+  color: #4e4e50;
+}
+.sena-ic--LINE_logo:before {
+  content: "\e94d";
+}
+.sena-ic--highway:before {
+  content: "\e94c";
+}
+.sena-ic--store:before {
+  content: "\e94b";
+}
+.sena-ic--compare:before {
+  content: "\e94a";
+}
+.sena-ic--location-nearby:before {
+  content: "\e948";
+}
+.sena-ic--voice-search:before {
+  content: "\e949";
+}
+.sena-ic--privilege:before {
+  content: "\e947";
+}
+.sena-ic--share:before {
+  content: "\e946";
+}
+.sena-ic--fax:before {
+  content: "\e943";
+}
+.sena-ic--www:before {
+  content: "\e944";
+}
+.sena-ic--phone:before {
+  content: "\e945";
+}
+.sena-ic--facebook-01:before {
+  content: "\e942";
+}
+.sena-ic--bedroom:before {
+  content: "\e93e";
+}
+.sena-ic--bathroom:before {
+  content: "\e93f";
+}
+.sena-ic--unit:before {
+  content: "\e940";
+}
+.sena-ic--project-status:before {
+  content: "\e941";
+}
+.sena-ic--area:before {
+  content: "\e938";
+}
+.sena-ic--attraction-nearby:before {
+  content: "\e939";
+}
+.sena-ic--Location:before {
+  content: "\e93a";
+}
+.sena-ic--Price:before {
+  content: "\e93b";
+}
+.sena-ic--promotion:before {
+  content: "\e93c";
+}
+.sena-ic--check-mark:before {
+  content: "\e93d";
+}
+.sena-ic--library:before {
+  content: "\e91b";
+}
+.sena-ic--ev-car-charger:before {
+  content: "\e91c";
+}
+.sena-ic--playground:before {
+  content: "\e91d";
+}
+.sena-ic--solar-roof:before {
+  content: "\e91e";
+}
+.sena-ic--clubhouse:before {
+  content: "\e91f";
+}
+.sena-ic--parking-lot:before {
+  content: "\e920";
+}
+.sena-ic--suana:before {
+  content: "\e921";
+}
+.sena-ic--garden:before {
+  content: "\e922";
+}
+.sena-ic--cctv:before {
+  content: "\e923";
+}
+.sena-ic--reception:before {
+  content: "\e924";
+}
+.sena-ic--river:before {
+  content: "\e925";
+}
+.sena-ic--themepark:before {
+  content: "\e926";
+}
+.sena-ic--swimming-pool:before {
+  content: "\e927";
+}
+.sena-ic--jogging-track:before {
+  content: "\e928";
+}
+.sena-ic--security-guard:before {
+  content: "\e929";
+}
+.sena-ic--park:before {
+  content: "\e92a";
+}
+.sena-ic--fitness:before {
+  content: "\e92b";
+}
+.sena-ic--police:before {
+  content: "\e92c";
+}
+.sena-ic--sport:before {
+  content: "\e92d";
+}
+.sena-ic--roof-top:before {
+  content: "\e92e";
+}
+.sena-ic--shuttle-car:before {
+  content: "\e92f";
+}
+.sena-ic--shopping:before {
+  content: "\e930";
+}
+.sena-ic--exhibition:before {
+  content: "\e931";
+}
+.sena-ic--hospital:before {
+  content: "\e932";
+}
+.sena-ic--school:before {
+  content: "\e933";
+}
+.sena-ic--laundry-shop:before {
+  content: "\e934";
+}
+.sena-ic--airport:before {
+  content: "\e935";
+}
+.sena-ic--other:before {
+  content: "\e936";
+}
+.sena-ic--commall:before {
+  content: "\e937";
+}
+.sena-ic--pdf:before {
+  content: "\e916";
+}
+.sena-ic--calculate:before {
+  content: "\e914";
+}
+.sena-ic--home:before {
+  content: "\e915";
+}
+.sena-ic--price:before {
+  content: "\e913";
+}
+.sena-ic--chat:before {
+  content: "\e901";
+}
+.sena-ic--chevron-down:before {
+  content: "\e903";
+}
+.sena-ic--unfavorite:before {
+  content: "\e90c";
+}
+.sena-ic--view-grid:before {
+  content: "\e90d";
+}
+.sena-ic--view-list:before {
+  content: "\e90f";
+}
+.sena-ic--check:before {
+  content: "\e900";
+}
+.sena-ic--cross:before {
+  content: "\e902";
+}
+.sena-ic--facebook:before {
+  content: "\e904";
+}
+.sena-ic--search:before {
+  content: "\e905";
+}
+.sena-ic--play:before {
+  content: "\e906";
+}
+.sena-ic--favorite:before {
+  content: "\e907";
+}
+.sena-ic--youtube:before {
+  content: "\e908";
+}
+.sena-ic--twitter:before {
+  content: "\e909";
+}
+.sena-ic--view-slide:before {
+  content: "\e90a";
+}
+.sena-ic--register:before {
+  content: "\e90b";
+}
+.sena-ic--menu:before {
+  content: "\e90e";
+}
+.sena-ic--instagram:before {
+  content: "\e910";
+}
+.sena-ic--call:before {
+  content: "\e911";
+}
+.sena-ic--pin:before {
+  content: "\e912";
+}
+.sena-ic--chevron-right:before {
+  content: "\e918";
+}
+.sena-ic--chevron-left:before {
+  content: "\e919";
+}
+.sena-ic--calendar:before {
+  content: "\e917";
+}
+.sena-ic--right-arrow:before {
+  content: "\e91a";
+}

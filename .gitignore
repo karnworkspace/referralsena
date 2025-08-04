@@ -1,0 +1,46 @@
+# Yii Framework
+assets/
+protected/runtime/
+themes/classic/views/
+.htaccess
+
+# Database config (sensitive)
+protected/config/database.php
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+*~
+*.swp
+*.swo
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# PHP
+*.tmp
+
+# Session files
+sess_*
+
+# Cache files
+**/cache/
+smartycache/
+
+# Uploads (depending on your needs, you might want to include these)
+uploads/*
+!uploads/.gitkeep
