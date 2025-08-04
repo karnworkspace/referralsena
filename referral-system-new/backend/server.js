@@ -108,7 +108,7 @@ app.post('/api/auth/login', (req, res) => {
     });
   }
   
-  // Mock login for testing
+  // Check admin login
   if (email === 'admin@test.com' && password === '123456') {
     return res.json({
       success: true,
@@ -119,7 +119,43 @@ app.post('/api/auth/login', (req, res) => {
           email: 'admin@test.com',
           role: 'admin'
         },
-        token: 'mock-jwt-token-12345'
+        token: 'mock-jwt-token-admin'
+      }
+    });
+  }
+  
+  // Check agent login
+  const agent = mockAgents.find(a => a.email === email && a.password === password);
+  
+  if (agent) {
+    if (agent.status === 'pending') {
+      return res.status(403).json({
+        success: false,
+        message: 'บัญचีของคุณยังไม่ได้รับการอนุมัติ กรุณารอการอนุมัติจากผู้ดูแลระบบ'
+      });
+    }
+    
+    if (agent.status === 'inactive') {
+      return res.status(403).json({
+        success: false,
+        message: 'บัญชีของคุณถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ'
+      });
+    }
+    
+    return res.json({
+      success: true,
+      message: 'เข้าสู่ระบบสำเร็จ',
+      data: {
+        user: {
+          id: agent.id,
+          email: agent.email,
+          role: 'agent',
+          agentId: agent.id,
+          agentCode: agent.agentCode,
+          firstName: agent.firstName,
+          lastName: agent.lastName
+        },
+        token: `mock-jwt-token-agent-${agent.id}`
       }
     });
   }
@@ -143,8 +179,8 @@ app.get('/api/auth/me', (req, res) => {
   
   const token = authHeader.split(' ')[1];
   
-  // Mock token validation
-  if (token === 'mock-jwt-token-12345') {
+  // Mock token validation for admin
+  if (token === 'mock-jwt-token-admin') {
     return res.json({
       success: true,
       message: 'ดึงข้อมูลผู้ใช้สำเร็จ',
@@ -154,6 +190,30 @@ app.get('/api/auth/me', (req, res) => {
         role: 'admin'
       }
     });
+  }
+  
+  // Mock token validation for agents
+  const agentTokenMatch = token.match(/^mock-jwt-token-agent-(\d+)$/);
+  if (agentTokenMatch) {
+    const agentId = parseInt(agentTokenMatch[1]);
+    const agent = mockAgents.find(a => a.id === agentId);
+    
+    if (agent) {
+      return res.json({
+        success: true,
+        message: 'ดึงข้อมูลผู้ใช้สำเร็จ',
+        data: {
+          id: agent.id,
+          email: agent.email,
+          role: 'agent',
+          agentId: agent.id,
+          agentCode: agent.agentCode,
+          firstName: agent.firstName,
+          lastName: agent.lastName,
+          status: agent.status
+        }
+      });
+    }
   }
   
   res.status(401).json({
@@ -170,6 +230,76 @@ app.post('/api/auth/logout', (req, res) => {
   });
 });
 
+// Agent Registration endpoint
+app.post('/api/auth/register-agent', (req, res) => {
+  const { 
+    firstName, 
+    lastName, 
+    email, 
+    phone, 
+    idCard, 
+    password 
+  } = req.body;
+  
+  // Basic validation
+  if (!firstName || !lastName || !email || !idCard || !password) {
+    return res.status(400).json({
+      success: false,
+      message: 'กรุณากรอกข้อมูลให้ครบถ้วน'
+    });
+  }
+  
+  // Check if email or ID card already exists
+  const existingAgent = mockAgents.find(a => 
+    a.email === email || a.idCard === idCard
+  );
+  
+  if (existingAgent) {
+    return res.status(400).json({
+      success: false,
+      message: 'อีเมลหรือเลขประจำตัวประชาชนนี้ถูกใช้แล้ว'
+    });
+  }
+  
+  // Generate new agent code
+  const existingCodes = mockAgents.map(a => a.agentCode);
+  let newAgentCode;
+  let codeNumber = 1;
+  
+  do {
+    newAgentCode = `AG${String(codeNumber).padStart(3, '0')}`;
+    codeNumber++;
+  } while (existingCodes.includes(newAgentCode));
+  
+  const newAgent = {
+    id: Math.max(...mockAgents.map(a => a.id)) + 1,
+    agentCode: newAgentCode,
+    firstName,
+    lastName,
+    email,
+    phone: phone || '',
+    idCard,
+    password, // In real app, this should be hashed
+    status: 'pending', // Agent needs admin approval
+    registrationDate: new Date().toISOString().split('T')[0],
+    createdAt: new Date().toISOString()
+  };
+  
+  mockAgents.push(newAgent);
+  
+  res.status(201).json({
+    success: true,
+    message: 'ลงทะเบียนสำเร็จ รอการอนุมัติจากผู้ดูแลระบบ',
+    data: {
+      agentCode: newAgent.agentCode,
+      firstName: newAgent.firstName,
+      lastName: newAgent.lastName,
+      email: newAgent.email,
+      status: newAgent.status
+    }
+  });
+});
+
 // Mock data for agents
 let mockAgents = [
   {
@@ -180,6 +310,7 @@ let mockAgents = [
     email: 'somchai@example.com',
     phone: '081-123-4567',
     idCard: '1234567890123',
+    password: '123456', // For testing
     status: 'active',
     registrationDate: '2023-01-15',
     createdAt: '2023-01-15T10:00:00Z'
@@ -192,6 +323,7 @@ let mockAgents = [
     email: 'sumalee@example.com',
     phone: '082-234-5678',
     idCard: '2345678901234',
+    password: '123456', // For testing
     status: 'active',
     registrationDate: '2023-02-20',
     createdAt: '2023-02-20T14:30:00Z'
@@ -204,6 +336,7 @@ let mockAgents = [
     email: 'wichan@example.com',
     phone: '083-345-6789',
     idCard: '3456789012345',
+    password: '123456', // For testing
     status: 'inactive',
     registrationDate: '2023-03-10',
     createdAt: '2023-03-10T09:15:00Z'
@@ -223,15 +356,34 @@ const checkAuth = (req, res, next) => {
   
   const token = authHeader.split(' ')[1];
   
-  if (token !== 'mock-jwt-token-12345') {
-    return res.status(401).json({
-      success: false,
-      message: 'Token ไม่ถูกต้อง'
-    });
+  // Check admin token
+  if (token === 'mock-jwt-token-admin') {
+    req.user = { id: 1, email: 'admin@test.com', role: 'admin' };
+    return next();
   }
   
-  req.user = { id: 1, email: 'admin@test.com', role: 'admin' };
-  next();
+  // Check agent token
+  const agentTokenMatch = token.match(/^mock-jwt-token-agent-(\d+)$/);
+  if (agentTokenMatch) {
+    const agentId = parseInt(agentTokenMatch[1]);
+    const agent = mockAgents.find(a => a.id === agentId);
+    
+    if (agent && agent.status === 'active') {
+      req.user = { 
+        id: agent.id, 
+        email: agent.email, 
+        role: 'agent',
+        agentId: agent.id,
+        agentCode: agent.agentCode
+      };
+      return next();
+    }
+  }
+  
+  return res.status(401).json({
+    success: false,
+    message: 'Token ไม่ถูกต้อง'
+  });
 };
 
 // Agents API endpoints

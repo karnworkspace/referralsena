@@ -9,7 +9,9 @@ import { getCurrentUser } from './store/authSlice';
 
 // Import components
 import LoginPage from './pages/LoginPage';
+import AgentRegister from './pages/AgentRegister';
 import Dashboard from './pages/Dashboard';
+import AgentDashboard from './pages/AgentDashboard';
 import LoadingSpinner from './components/LoadingSpinner';
 
 // Protected Route component
@@ -23,15 +25,20 @@ const ProtectedRoute = ({ children }) => {
   return isAuthenticated ? children : <Navigate to="/login" />;
 };
 
-// Public Route component (redirect to dashboard if authenticated)
+// Public Route component (redirect to appropriate dashboard if authenticated)
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useSelector((state) => state.auth);
+  const { isAuthenticated, loading, user } = useSelector((state) => state.auth);
   
   if (loading) {
     return <LoadingSpinner />;
   }
   
-  return !isAuthenticated ? children : <Navigate to="/dashboard" />;
+  if (isAuthenticated) {
+    const redirectPath = user?.role === 'admin' ? '/admin/dashboard' : '/agent/dashboard';
+    return <Navigate to={redirectPath} />;
+  }
+  
+  return children;
 };
 
 // App content component (inside Redux Provider)
@@ -71,22 +78,41 @@ const AppContent = () => {
                 </PublicRoute>
               }
             />
+            <Route
+              path="/register-agent"
+              element={
+                <PublicRoute>
+                  <AgentRegister />
+                </PublicRoute>
+              }
+            />
             
             {/* Protected routes */}
             <Route
-              path="/dashboard"
+              path="/admin/dashboard"
               element={
                 <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/agent/dashboard"
+              element={
+                <ProtectedRoute>
+                  <AgentDashboard />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Legacy dashboard redirect */}
+            <Route path="/dashboard" element={<Navigate to="/admin/dashboard" />} />
             
             {/* Default redirect */}
-            <Route path="/" element={<Navigate to="/dashboard" />} />
+            <Route path="/" element={<Navigate to="/login" />} />
             
-            {/* 404 - redirect to dashboard */}
-            <Route path="*" element={<Navigate to="/dashboard" />} />
+            {/* 404 - redirect to login */}
+            <Route path="*" element={<Navigate to="/login" />} />
           </Routes>
         </Router>
       </AntApp>

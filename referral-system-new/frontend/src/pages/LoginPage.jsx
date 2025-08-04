@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Card, Row, Col, Alert, Typography } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { Link } from 'react-router-dom';
+import { Form, Input, Button, Card, Row, Col, Alert, Typography, Space, Divider } from 'antd';
+import { UserOutlined, LockOutlined, TeamOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser, clearError } from '../store/authSlice';
 
@@ -100,7 +101,27 @@ const LoginPage = () => {
               </Form.Item>
             </Form>
 
-            <div style={{ textAlign: 'center', marginTop: '24px' }}>
+            <Divider>หรือ</Divider>
+            
+            <div style={{ textAlign: 'center' }}>
+              <Link to="/register-agent">
+                <Button 
+                  type="default" 
+                  icon={<TeamOutlined />}
+                  block
+                  size="large"
+                  style={{ 
+                    height: '48px', 
+                    fontSize: '16px',
+                    marginBottom: '16px'
+                  }}
+                >
+                  สมัครเป็นเอเจนต์
+                </Button>
+              </Link>
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: '16px' }}>
               <Text type="secondary" style={{ fontSize: '12px' }}>
                 ทดสอบระบบ: admin@test.com / 123456
               </Text>
