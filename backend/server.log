@@ -1,0 +1,10 @@
+🚀 Server running on http://localhost:5001
+📊 Environment: development
+🔗 API Base URL: http://localhost:5001/api
+🏥 Health Check: http://localhost:5001/health
+[0mGET /health [32m200[0m 2.911 ms - 113[0m
+[0mGET /health [32m200[0m 0.123 ms - 113[0m
+[0mGET /api [32m200[0m 0.108 ms - 211[0m
+[0mPOST /api/auth/login [32m200[0m 0.122 ms - 176[0m
+SIGTERM received. Shutting down gracefully...
+Process terminated
