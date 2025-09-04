@@ -55,7 +55,7 @@ const Agent = sequelize.define('Agent', {
     field: 'registration_date'
   },
   status: {
-    type: DataTypes.ENUM('active', 'inactive', 'suspended'),
+    type: DataTypes.ENUM('active', 'inactive', 'pending'),
     defaultValue: 'active'
   },
   bankAccount: {

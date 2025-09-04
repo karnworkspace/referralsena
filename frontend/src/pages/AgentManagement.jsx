@@ -27,7 +27,8 @@ import {
   PhoneOutlined,
   IdcardOutlined,
   CheckCircleOutlined,
-  ClockCircleOutlined
+  ClockCircleOutlined,
+  EyeOutlined
 } from '@ant-design/icons';
 import {
   fetchAgents,
@@ -55,6 +56,8 @@ const AgentManagement = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingAgent, setEditingAgent] = useState(null);
   const [form] = Form.useForm();
+  const [isViewModalVisible, setIsViewModalVisible] = useState(false);
+  const [viewingAgent, setViewingAgent] = useState(null);
 
   // Load agents on component mount
   useEffect(() => {
@@ -83,7 +86,11 @@ const AgentManagement = () => {
       dataIndex: 'agentCode',
       key: 'agentCode',
       width: 120,
-      render: (text) => <Tag color="blue">{text}</Tag>
+      render: (text, record) => (
+        <Typography.Link onClick={() => handleView(record)}>
+          <Tag color="blue">{text}</Tag>
+        </Typography.Link>
+      )
     },
     {
       title: 'ชื่อ-นามสกุล',
@@ -183,6 +190,13 @@ const AgentManagement = () => {
               </Popconfirm>
             </Tooltip>
           )}
+          <Tooltip title="ดูข้อมูล">
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
+              onClick={() => handleView(record)}
+            />
+          </Tooltip>
           <Tooltip title="แก้ไข">
             <Button
               type="text"
@@ -251,6 +265,12 @@ const AgentManagement = () => {
       status: agent.status,
       registrationDate: agent.registrationDate
     });
+  };
+
+  // Handle view agent details
+  const handleView = (agent) => {
+    setViewingAgent(agent);
+    setIsViewModalVisible(true);
   };
 
   // Handle approve agent
@@ -402,7 +422,7 @@ const AgentManagement = () => {
         open={isModalVisible}
         onCancel={handleCancel}
         footer={null}
-        width={600}
+        width={500}
       >
         <Form
           form={form}
@@ -434,6 +454,7 @@ const AgentManagement = () => {
                 <Select placeholder="เลือกสถานะ">
                   <Option value="active">ใช้งาน</Option>
                   <Option value="inactive">ไม่ใช้งาน</Option>
+                  <Option value="pending">รออนุมัติ</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -527,6 +548,99 @@ const AgentManagement = () => {
             </Space>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Agent View Modal */}
+      <Modal
+        title="รายละเอียดเอเจนต์"
+        open={isViewModalVisible}
+        onCancel={() => {
+          setIsViewModalVisible(false);
+          setViewingAgent(null);
+        }}
+        footer={[
+          <Button key="back" onClick={() => {
+            setIsViewModalVisible(false);
+            setViewingAgent(null);
+          }}>
+            ปิด
+          </Button>,
+        ]}
+        width={600}
+      >
+        {viewingAgent && (
+          <Form layout="vertical" initialValues={viewingAgent}>
+            <Row gutter={16}>
+              <Col xs={24} sm={12}>
+                <Form.Item label="รหัสเอเจนต์">
+                  <Typography.Text strong>{viewingAgent.agentCode}</Typography.Text>
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item label="สถานะ">
+                  <Tag color={viewingAgent.status === 'active' ? 'green' : viewingAgent.status === 'pending' ? 'orange' : 'red'}>
+                    {viewingAgent.status === 'active' ? 'ใช้งาน' : viewingAgent.status === 'pending' ? 'รออนุมัติ' : 'ไม่ใช้งาน'}
+                  </Tag>
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
+              <Col xs={24} sm={12}>
+                <Form.Item label="ชื่อ">
+                  <Typography.Text strong>{viewingAgent.firstName}</Typography.Text>
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item label="นามสกุล">
+                  <Typography.Text strong>{viewingAgent.lastName}</Typography.Text>
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Form.Item label="อีเมล">
+              <Typography.Text strong>{viewingAgent.email}</Typography.Text>
+            </Form.Item>
+
+            <Row gutter={16}>
+              <Col xs={24} sm={12}>
+                <Form.Item label="เบอร์โทร">
+                  <Typography.Text strong>{viewingAgent.phone || '-'}</Typography.Text>
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item label="วันที่ลงทะเบียน">
+                  <Typography.Text strong>{new Date(viewingAgent.registrationDate).toLocaleDateString('th-TH')}</Typography.Text>
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Form.Item label="เลขประจำตัวประชาชน">
+              <Typography.Text strong>{viewingAgent.idCard}</Typography.Text>
+            </Form.Item>
+
+            <Form.Item label="ที่อยู่">
+              <Typography.Text strong>{viewingAgent.address || '-'}</Typography.Text>
+            </Form.Item>
+
+            <Row gutter={16}>
+              <Col xs={24} sm={12}>
+                <Form.Item label="บัญชีธนาคาร">
+                  <Typography.Text strong>{viewingAgent.bankAccount || '-'}</Typography.Text>
+                </Form.Item>
+              </Col>
+              <Col xs={24} sm={12}>
+                <Form.Item label="ชื่อธนาคาร">
+                  <Typography.Text strong>{viewingAgent.bankName || '-'}</Typography.Text>
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Form.Item label="เลขประจำตัวผู้เสียภาษี">
+              <Typography.Text strong>{viewingAgent.taxId || '-'}</Typography.Text>
+            </Form.Item>
+          </Form>
+        )}
       </Modal>
     </div>
   );
