@@ -30,6 +30,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '../store/authSlice';
 import AgentManagement from './AgentManagement';
 import CustomerManagement from './CustomerManagement';
+import ProjectManagement from './ProjectManagement';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -135,6 +136,15 @@ const Dashboard = () => {
                     value={5}
                     valueStyle={{ color: '#1890ff' }}
                   />
+                  <div style={{ marginTop: '8px' }}>
+                    <Button 
+                      type="link" 
+                      size="small"
+                      onClick={() => setSelectedMenu('customers')}
+                    >
+                      ดูรายละเอียด →
+                    </Button>
+                  </div>
                 </Card>
               </Col>
               <Col xs={24} sm={12} lg={6}>
@@ -159,11 +169,7 @@ const Dashboard = () => {
       case 'customers':
         return <CustomerManagement />;
       case 'projects':
-        return (
-          <Card title="จัดการโครงการ">
-            <Text type="secondary">หน้าจัดการโครงการ - กำลังพัฒนา</Text>
-          </Card>
-        );
+        return <ProjectManagement />;
       case 'reports':
         return (
           <Card title="รายงาน">

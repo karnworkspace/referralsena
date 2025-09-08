@@ -64,7 +64,7 @@ const Customer = sequelize.define('Customer', {
   status: {
     type: DataTypes.ENUM(
       'new', 'contacted', 'interested', 'visit_scheduled', 
-      'visited', 'negotiating', 'closed_won', 'closed_lost'
+      'visited', 'negotiating', 'closed_won', 'closed_lost', 'pending'
     ),
     defaultValue: 'new'
   },

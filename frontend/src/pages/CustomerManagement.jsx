@@ -15,7 +15,8 @@ import {
   Tag,
   notification,
   Popconfirm,
-  Tooltip
+  Tooltip,
+  Descriptions
 } from 'antd';
 import { 
   PlusOutlined, 
@@ -27,7 +28,8 @@ import {
   PhoneOutlined,
   IdcardOutlined,
   HomeOutlined,
-  TeamOutlined
+  TeamOutlined,
+  EyeOutlined
 } from '@ant-design/icons';
 import {
   fetchCustomers,
@@ -44,6 +46,23 @@ const { Title } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 
+const getStatusTag = (status) => {
+  const statusMap = {
+    new: { color: 'blue', text: 'ใหม่' },
+    contacted: { color: 'cyan', text: 'ติดต่อแล้ว' },
+    interested: { color: 'geekblue', text: 'สนใจ' },
+    visit_scheduled: { color: 'purple', text: 'นัดหมายแล้ว' },
+    visited: { color: 'magenta', text: 'เยี่ยมชมแล้ว' },
+    negotiating: { color: 'gold', text: 'กำลังเจรจา' },
+    closed_won: { color: 'green', text: 'ขายสำเร็จ' },
+    closed_lost: { color: 'red', text: 'ขายไม่สำเร็จ' },
+    pending: { color: 'orange', text: 'รออนุมัติ' },
+  };
+
+  const { color, text } = statusMap[status] || { color: 'default', text: status };
+  return <Tag color={color}>{text}</Tag>;
+};
+
 const CustomerManagement = () => {
   const dispatch = useDispatch();
   const { 
@@ -58,6 +77,8 @@ const CustomerManagement = () => {
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
+  const [isViewModalVisible, setIsViewModalVisible] = useState(false);
+  const [viewingCustomer, setViewingCustomer] = useState(null);
   const [form] = Form.useForm();
 
   // Load customers and agents on component mount
@@ -67,17 +88,8 @@ const CustomerManagement = () => {
       limit: pagination.pageSize,
       ...filters
     }));
-    console.log('=== Dispatching fetchAgentsList ===');
     dispatch(fetchAgentsList());
   }, [dispatch, pagination.current, pagination.pageSize, filters]);
-
-  // Debug agentsList
-  useEffect(() => {
-    console.log('=== CustomerManagement Debug ===');
-    console.log('agentsList:', agentsList);
-    console.log('agentsLoading:', agentsLoading);
-    console.log('error:', error);
-  }, [agentsList, agentsLoading, error]);
 
   // Handle error notifications
   useEffect(() => {
@@ -90,6 +102,12 @@ const CustomerManagement = () => {
     }
   }, [error, dispatch]);
 
+  // Handle view customer
+  const handleView = (customer) => {
+    setViewingCustomer(customer);
+    setIsViewModalVisible(true);
+  };
+
   // Table columns
   const columns = [
     {
@@ -97,7 +115,11 @@ const CustomerManagement = () => {
       dataIndex: 'customerCode',
       key: 'customerCode',
       width: 120,
-      render: (text) => <Tag color="green">{text}</Tag>
+      render: (text, record) => (
+        <a onClick={() => handleView(record)}>
+          <Tag color="green" style={{ cursor: 'pointer' }}>{text}</Tag>
+        </a>
+      )
     },
     {
       title: 'ชื่อ-นามสกุล',
@@ -169,11 +191,7 @@ const CustomerManagement = () => {
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (status) => (
-        <Tag color={status === 'active' ? 'green' : 'red'}>
-          {status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน'}
-        </Tag>
-      )
+      render: (status) => getStatusTag(status)
     },
     {
       title: 'วันที่ลงทะเบียน',
@@ -189,6 +207,13 @@ const CustomerManagement = () => {
       fixed: 'right',
       render: (_, record) => (
         <Space>
+          <Tooltip title="ดูรายละเอียด">
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
+              onClick={() => handleView(record)}
+            />
+          </Tooltip>
           <Tooltip title="แก้ไข">
             <Button
               type="text"
@@ -363,8 +388,15 @@ const CustomerManagement = () => {
               onChange={handleStatusFilter}
             >
               <Option value="all">ทั้งหมด</Option>
-              <Option value="active">ใช้งาน</Option>
-              <Option value="inactive">ไม่ใช้งาน</Option>
+              <Option value="new">ใหม่</Option>
+              <Option value="contacted">ติดต่อแล้ว</Option>
+              <Option value="interested">สนใจ</Option>
+              <Option value="visit_scheduled">นัดหมายแล้ว</Option>
+              <Option value="visited">เยี่ยมชมแล้ว</Option>
+              <Option value="negotiating">กำลังเจรจา</Option>
+              <Option value="closed_won">ขายสำเร็จ</Option>
+              <Option value="closed_lost">ขายไม่สำเร็จ</Option>
+              <Option value="pending">รออนุมัติ</Option>
             </Select>
           </Col>
           <Col xs={24} sm={6} md={6}>
@@ -442,8 +474,15 @@ const CustomerManagement = () => {
                 rules={[{ required: true, message: 'กรุณาเลือกสถานะ' }]}
               >
                 <Select placeholder="เลือกสถานะ">
-                  <Option value="active">ใช้งาน</Option>
-                  <Option value="inactive">ไม่ใช้งาน</Option>
+                  <Option value="new">ใหม่</Option>
+                  <Option value="contacted">ติดต่อแล้ว</Option>
+                  <Option value="interested">สนใจ</Option>
+                  <Option value="visit_scheduled">นัดหมายแล้ว</Option>
+                  <Option value="visited">เยี่ยมชมแล้ว</Option>
+                  <Option value="negotiating">กำลังเจรจา</Option>
+                  <Option value="closed_won">ขายสำเร็จ</Option>
+                  <Option value="closed_lost">ขายไม่สำเร็จ</Option>
+                  <Option value="pending">รออนุมัติ</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -569,6 +608,38 @@ const CustomerManagement = () => {
             </Space>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Customer View Modal */}
+      <Modal
+        title="รายละเอียดลูกค้า"
+        open={isViewModalVisible}
+        onCancel={() => setIsViewModalVisible(false)}
+        footer={[
+          <Button key="back" onClick={() => setIsViewModalVisible(false)}>
+            ปิด
+          </Button>,
+        ]}
+        width={700}
+      >
+        {viewingCustomer && (
+          <Descriptions bordered column={2}>
+            <Descriptions.Item label="รหัสลูกค้า">{viewingCustomer.customerCode}</Descriptions.Item>
+            <Descriptions.Item label="สถานะ">
+              {getStatusTag(viewingCustomer.status)}
+            </Descriptions.Item>
+            <Descriptions.Item label="ชื่อ">{viewingCustomer.firstName}</Descriptions.Item>
+            <Descriptions.Item label="นามสกุล">{viewingCustomer.lastName}</Descriptions.Item>
+            <Descriptions.Item label="อีเมล" span={2}>{viewingCustomer.email}</Descriptions.Item>
+            <Descriptions.Item label="เบอร์โทร">{viewingCustomer.phone}</Descriptions.Item>
+            <Descriptions.Item label="วันที่ลงทะเบียน">{new Date(viewingCustomer.registrationDate).toLocaleDateString('th-TH')}</Descriptions.Item>
+            <Descriptions.Item label="เลขประจำตัวประชาชน" span={2}>{viewingCustomer.idCard}</Descriptions.Item>
+            <Descriptions.Item label="เอเจนต์ที่รับผิดชอบ" span={2}>
+              {viewingCustomer.agent ? `${viewingCustomer.agent.agentCode} - ${viewingCustomer.agent.firstName}` : '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="ที่อยู่" span={2}>{viewingCustomer.address}</Descriptions.Item>
+          </Descriptions>
+        )}
       </Modal>
     </div>
   );
