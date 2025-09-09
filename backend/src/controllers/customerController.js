@@ -1,4 +1,4 @@
-import { Customer, Agent, User } from '../models/index.js';
+import { Customer, Agent, User, Project } from '../models/index.js';
 import { Op } from 'sequelize';
 
 // @desc    Get all customers
@@ -36,10 +36,24 @@ export const getCustomers = async (req, res) => {
           as: 'agent',
           attributes: ['id', 'agentCode', 'firstName', 'lastName'],
         },
+        {
+          model: Project,
+          as: 'project',
+          attributes: ['projectName'],
+        },
       ],
       limit: parseInt(limit),
       offset: parseInt(offset),
       order: [['createdAt', 'DESC']],
+    });
+
+    const customers = rows.map(customer => {
+      const plainCustomer = customer.get({ plain: true });
+      return {
+        ...plainCustomer,
+        projectName: plainCustomer.project?.projectName,
+        budget: (parseFloat(plainCustomer.budgetMin) + parseFloat(plainCustomer.budgetMax)) / 2,
+      };
     });
 
     const totalPages = Math.ceil(count / limit);
@@ -47,7 +61,7 @@ export const getCustomers = async (req, res) => {
     res.json({
       success: true,
       message: 'Customers fetched successfully',
-      data: rows,
+      data: customers,
       pagination: {
         total: count,
         current: parseInt(page),

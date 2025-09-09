@@ -157,6 +157,20 @@ const CustomerManagement = () => {
       ) : '-'
     },
     {
+      title: 'ชื่อโครงการ',
+      dataIndex: 'projectName',
+      key: 'projectName',
+      width: 150,
+      render: (text) => text || '-'
+    },
+    {
+      title: 'งบประมาณ',
+      dataIndex: 'budget',
+      key: 'budget',
+      width: 120,
+      render: (text) => text ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(text) : '-'
+    },
+    {
       title: 'เอเจนต์',
       key: 'agent',
       width: 150,
@@ -278,12 +292,22 @@ const CustomerManagement = () => {
   const handleEdit = (customer) => {
     setEditingCustomer(customer);
     setIsModalVisible(true);
+
+    let budgetRange = '';
+    if (customer.budgetMin !== null && customer.budgetMax !== null) {
+      budgetRange = `${customer.budgetMin}-${customer.budgetMax}`;
+    } else if (customer.budgetMin !== null) {
+      budgetRange = `${customer.budgetMin}-`;
+    }
+
     form.setFieldsValue({
       customerCode: customer.customerCode,
       firstName: customer.firstName,
       lastName: customer.lastName,
       email: customer.email,
       phone: customer.phone,
+      projectName: customer.projectName,
+      budgetRange: budgetRange,
       idCard: customer.idCard,
       address: customer.address,
       agentId: customer.agentId,
@@ -311,11 +335,23 @@ const CustomerManagement = () => {
   // Handle form submit
   const handleSubmit = async (values) => {
     try {
+      const { budgetRange, ...rest } = values;
+      let budgetMin = null;
+      let budgetMax = null;
+
+      if (budgetRange) {
+        [budgetMin, budgetMax] = budgetRange.split('-');
+        budgetMin = parseInt(budgetMin, 10);
+        budgetMax = budgetMax ? parseInt(budgetMax, 10) : null;
+      }
+
+      const customerData = { ...rest, budgetMin, budgetMax };
+
       if (editingCustomer) {
         // Update existing customer
         await dispatch(updateCustomer({
           id: editingCustomer.id,
-          customerData: values
+          customerData,
         })).unwrap();
         notification.success({
           message: 'สำเร็จ',
@@ -323,7 +359,7 @@ const CustomerManagement = () => {
         });
       } else {
         // Create new customer
-        await dispatch(createCustomer(values)).unwrap();
+        await dispatch(createCustomer(customerData)).unwrap();
         notification.success({
           message: 'สำเร็จ',
           description: 'เพิ่มลูกค้าสำเร็จ',
@@ -537,6 +573,31 @@ const CustomerManagement = () => {
             </Col>
             <Col xs={24} sm={12}>
               <Form.Item
+                name="projectName"
+                label="ชื่อโครงการ"
+              >
+                <Input placeholder="ชื่อโครงการ" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="budgetRange"
+                label="งบประมาณ"
+              >
+                <Select placeholder="เลือกงบประมาณ">
+                  <Option value="0-1000000">ต่ำกว่า 1 ล้านบาท</Option>
+                  <Option value="1000000-2000000">1-2 ล้านบาท</Option>
+                  <Option value="2000000-3000000">2-3 ล้านบาท</Option>
+                  <Option value="4000000-5000000">4-5 ล้านบาท</Option>
+                  <Option value="5000000-">มากกว่า 5 ล้านบาท</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item
                 name="registrationDate"
                 label="วันที่ลงทะเบียน"
                 rules={[{ required: true, message: 'กรุณาใส่วันที่ลงทะเบียน' }]}
@@ -632,6 +693,8 @@ const CustomerManagement = () => {
             <Descriptions.Item label="นามสกุล">{viewingCustomer.lastName}</Descriptions.Item>
             <Descriptions.Item label="อีเมล" span={2}>{viewingCustomer.email}</Descriptions.Item>
             <Descriptions.Item label="เบอร์โทร">{viewingCustomer.phone}</Descriptions.Item>
+            <Descriptions.Item label="ชื่อโครงการ">{viewingCustomer.projectName || '-'}</Descriptions.Item>
+            <Descriptions.Item label="งบประมาณ">{viewingCustomer.budget ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(viewingCustomer.budget) : '-'}</Descriptions.Item>
             <Descriptions.Item label="วันที่ลงทะเบียน">{new Date(viewingCustomer.registrationDate).toLocaleDateString('th-TH')}</Descriptions.Item>
             <Descriptions.Item label="เลขประจำตัวประชาชน" span={2}>{viewingCustomer.idCard}</Descriptions.Item>
             <Descriptions.Item label="เอเจนต์ที่รับผิดชอบ" span={2}>
