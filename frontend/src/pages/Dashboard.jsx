@@ -102,7 +102,7 @@ const Dashboard = () => {
         return (
           <div>
             <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-              <Col xs={24} sm={12} lg={6}>
+              <Col xs={24} sm={12} lg={8}>
                 <Card>
                   <Statistic
                     title="เอเจนต์ทั้งหมด"
@@ -111,7 +111,7 @@ const Dashboard = () => {
                   />
                 </Card>
               </Col>
-              <Col xs={24} sm={12} lg={6}>
+              <Col xs={24} sm={12} lg={8}>
                 <Card>
                   <Statistic
                     title="เอเจนต์รออนุมัติ"
@@ -119,8 +119,8 @@ const Dashboard = () => {
                     valueStyle={{ color: '#fa8c16' }}
                   />
                   <div style={{ marginTop: '8px' }}>
-                    <Button 
-                      type="link" 
+                    <Button
+                      type="link"
                       size="small"
                       onClick={() => setSelectedMenu('agents')}
                     >
@@ -129,7 +129,7 @@ const Dashboard = () => {
                   </div>
                 </Card>
               </Col>
-              <Col xs={24} sm={12} lg={6}>
+              <Col xs={24} sm={12} lg={8}>
                 <Card>
                   <Statistic
                     title="ลูกค้าใหม่"
@@ -137,24 +137,14 @@ const Dashboard = () => {
                     valueStyle={{ color: '#1890ff' }}
                   />
                   <div style={{ marginTop: '8px' }}>
-                    <Button 
-                      type="link" 
+                    <Button
+                      type="link"
                       size="small"
                       onClick={() => setSelectedMenu('customers')}
                     >
                       ดูรายละเอียด →
                     </Button>
                   </div>
-                </Card>
-              </Col>
-              <Col xs={24} sm={12} lg={6}>
-                <Card>
-                  <Statistic
-                    title="ยอดขายเดือนนี้"
-                    value={0}
-                    suffix="บาท"
-                    valueStyle={{ color: '#cf1322' }}
-                  />
                 </Card>
               </Col>
             </Row>

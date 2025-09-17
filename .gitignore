@@ -117,3 +117,7 @@ Thumbs.db
 .vscode/
 node_modules/
 .env
+
+# Database documentation (contains sensitive info)
+databaseset.md
+*backup*.sql
