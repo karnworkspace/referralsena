@@ -1,5 +1,12 @@
 require('dotenv').config();
 
+// Helper: parse comma-separated origins into array; default to common dev ports
+const parseOrigins = (val) => {
+  if (!val || typeof val !== 'string') return ['http://localhost:5173', 'http://localhost:3000'];
+  const parts = val.split(',').map(s => s.trim()).filter(Boolean);
+  return parts.length ? parts : ['http://localhost:5173', 'http://localhost:3000'];
+};
+
 const config = {
   server: {
     port: process.env.PORT || 5001,
@@ -23,7 +30,7 @@ const config = {
   },
   
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: parseOrigins(process.env.CORS_ORIGIN),
     credentials: true
   },
   

@@ -424,13 +424,16 @@ const AgentDashboard = () => {
           background: 'rgba(255, 255, 255, 0.1)',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: collapsed ? 'center' : 'flex-start'
+          justifyContent: collapsed ? 'center' : 'flex-start',
+          gap: collapsed ? 0 : 10
         }}>
+          <img 
+            src="/sena-logo.png" 
+            alt="SENA"
+            style={{ width: collapsed ? 28 : 28, height: 28, objectFit: 'contain', borderRadius: 4 }}
+          />
           {!collapsed && (
-            <Title level={4} style={{ color: 'white', margin: 0 }}>
-              <TeamOutlined style={{ marginRight: '8px' }} />
-              Agent Portal
-            </Title>
+            <Title level={4} style={{ color: 'white', margin: 0 }}>SENA Agent</Title>
           )}
         </div>
         <Menu

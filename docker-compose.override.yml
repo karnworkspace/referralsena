@@ -1,0 +1,18 @@
+services:
+  api:
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    # ติดตั้ง dependencies (รวม devDependencies) ทุกครั้งที่ start แล้วค่อยรัน dev
+    command: sh -c "npm ci && npm run dev"
+    environment:
+      PORT: 4000
+
+  web:
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    # บังคับให้ Vite ฟังทุกอินเทอร์เฟซและใช้พอร์ต 5173
+    command: ["npm","run","dev","--","--host","0.0.0.0","--port","5173","--strictPort"]
+    ports:
+      - "5173:5173"

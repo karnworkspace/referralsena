@@ -1,12 +1,21 @@
 import axios from 'axios';
 
+// ----- Base URLs (from env, with sensible defaults) -----
+const API_BASE =
+  import.meta.env.VITE_API_BASE || 'http://localhost:4000/api';
+console.log("VITE_API_BASE =", import.meta.env.VITE_API_BASE);
+// derive origin for non-/api endpoints like /health
+const ORIGIN = API_BASE.replace(/\/api\/?$/, '');
+
 // Create axios instance
 const api = axios.create({
-  baseURL: 'http://localhost:5001/api',
+  baseURL: API_BASE,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
+  // If you later switch to cookie-based auth, uncomment below:
+  // withCredentials: true,
 });
 
 // Request interceptor to add auth token
@@ -18,16 +27,12 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Response interceptor to handle errors
 api.interceptors.response.use(
-  (response) => {
-    return response.data;
-  },
+  (response) => response.data,
   (error) => {
     if (error.response?.status === 401) {
       // Unauthorized - clear token and redirect to login
@@ -35,11 +40,11 @@ api.interceptors.response.use(
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
-    
+
     return Promise.reject({
       message: error.response?.data?.message || error.message || 'เกิดข้อผิดพลาด',
       status: error.response?.status,
-      data: error.response?.data
+      data: error.response?.data,
     });
   }
 );
@@ -86,8 +91,8 @@ export const projectsAPI = {
 
 // Health check
 export const healthAPI = {
-  check: () => axios.get('http://localhost:5001/health'),
-  testDB: () => axios.get('http://localhost:5001/api/test-db'),
+  check: () => axios.get(`${ORIGIN}/health`),
+  testDB: () => axios.get(`${API_BASE}/test-db`),
 };
 
 export default api;
