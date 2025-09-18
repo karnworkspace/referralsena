@@ -1245,6 +1245,112 @@ app.get('/api/dashboard/stats', checkAuth, async (req, res) => {
   }
 });
 
+// GET /api/dashboard/recent-activities - Get recent activities for current user
+app.get('/api/dashboard/recent-activities', checkAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const limit = 5; // แสดง 5 รายการล่าสุด
+
+    // Get recent activities from various operations
+    const activities = [];
+
+    // Get recent agents - since agents table doesn't have created_by/updated_by columns, just get latest agents
+    const recentAgents = await Agent.findAll({
+      order: [['updated_at', 'DESC']],
+      limit: 3,
+      attributes: ['id', 'agentCode', 'firstName', 'lastName', 'created_at', 'updated_at']
+    });
+
+    // Get recent customers - fallback to all recent customers if no user-specific data
+    let recentCustomers = await Customer.findAll({
+      where: {
+        [require('sequelize').Op.or]: [
+          { created_by: userId },
+          { updated_by: userId }
+        ]
+      },
+      order: [['updated_at', 'DESC']],
+      limit: 3,
+      attributes: ['id', 'firstName', 'lastName', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by'],
+      include: [
+        {
+          model: Agent,
+          attributes: ['agentCode', 'firstName', 'lastName'],
+          required: false
+        }
+      ]
+    });
+
+    // If no user-specific customers found, get latest customers
+    if (recentCustomers.length === 0) {
+      recentCustomers = await Customer.findAll({
+        order: [['updated_at', 'DESC']],
+        limit: 2,
+        attributes: ['id', 'firstName', 'lastName', 'status', 'created_at', 'updated_at', 'created_by', 'updated_by'],
+        include: [
+          {
+            model: Agent,
+            attributes: ['agentCode', 'firstName', 'lastName'],
+            required: false
+          }
+        ]
+      });
+    }
+
+    // Format agent activities - since agents table doesn't have created_by/updated_by,
+    // determine if it's created vs updated by comparing created_at and updated_at times
+    recentAgents.forEach(agent => {
+      const isCreated = agent.created_at && agent.updated_at &&
+        new Date(agent.created_at).getTime() === new Date(agent.updated_at).getTime();
+
+      activities.push({
+        id: `agent-${agent.id}`,
+        type: 'agent',
+        action: isCreated ? 'created' : 'updated',
+        title: isCreated ? 'เพิ่มเอเจนต์ใหม่' : 'ปรับปรุงข้อมูลเอเจนต์',
+        description: `${agent.agentCode || agent.firstName || ''} ${agent.lastName || ''}`.trim() || `เอเจนต์ #${agent.id}`,
+        timestamp: agent.updated_at || agent.created_at,
+        icon: 'user'
+      });
+    });
+
+    // Format customer activities
+    recentCustomers.forEach(customer => {
+      const isCreated = customer.created_by === userId &&
+        customer.created_at && customer.updated_at &&
+        new Date(customer.created_at).getTime() === new Date(customer.updated_at).getTime();
+
+      activities.push({
+        id: `customer-${customer.id}`,
+        type: 'customer',
+        action: isCreated ? 'created' : 'updated',
+        title: isCreated ? 'เพิ่มลูกค้าใหม่' : 'ปรับปรุงข้อมูลลูกค้า',
+        description: `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || `ลูกค้า #${customer.id}` +
+          (customer.Agent ? ` (เอเจนต์: ${customer.Agent.firstName || customer.Agent.agentCode || 'ไม่ระบุ'})` : ''),
+        timestamp: customer.updated_at || customer.created_at,
+        icon: 'team'
+      });
+    });
+
+    // Sort all activities by timestamp and take top 5
+    activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const topActivities = activities.slice(0, limit);
+
+    res.json({
+      success: true,
+      message: 'ดึงกิจกรรมล่าสุดสำเร็จ',
+      data: topActivities
+    });
+
+  } catch (error) {
+    console.error('Get recent activities error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการดึงกิจกรรมล่าสุด'
+    });
+  }
+});
+
 // Setup associations
 User.hasOne(Agent, { foreignKey: 'userId' });
 Agent.belongsTo(User, { foreignKey: 'userId' });

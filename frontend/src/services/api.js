@@ -92,6 +92,7 @@ export const projectsAPI = {
 // Dashboard API
 export const dashboardAPI = {
   getStats: () => api.get('/dashboard/stats'),
+  getRecentActivities: () => api.get('/dashboard/recent-activities'),
 };
 
 // Health check

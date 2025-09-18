@@ -12,7 +12,8 @@ import {
   Statistic,
   Space,
   Badge,
-  Spin
+  Spin,
+  List
 } from 'antd';
 import {
   MenuFoldOutlined,
@@ -25,7 +26,10 @@ import {
   ProjectOutlined,
   BarChartOutlined,
   SettingOutlined,
-  BellOutlined
+  BellOutlined,
+  ClockCircleOutlined,
+  EditOutlined,
+  PlusOutlined
 } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '../store/authSlice';
@@ -50,7 +54,9 @@ const Dashboard = () => {
     newCustomers: 0,
     pendingCustomers: 0
   });
+  const [recentActivities, setRecentActivities] = useState([]);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
 
   const fetchDashboardStats = async () => {
     try {
@@ -76,9 +82,26 @@ const Dashboard = () => {
     }
   };
 
+  const fetchRecentActivities = async () => {
+    try {
+      setActivitiesLoading(true);
+      const response = await dashboardAPI.getRecentActivities();
+      console.log('Recent activities response:', response);
+
+      if (response.data) {
+        setRecentActivities(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching recent activities:', error);
+    } finally {
+      setActivitiesLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (selectedMenu === 'dashboard') {
       fetchDashboardStats();
+      fetchRecentActivities();
     }
   }, [selectedMenu]);
 
@@ -200,9 +223,96 @@ const Dashboard = () => {
                 </Col>
               </Row>
             </Spin>
-            
-            <Card title="กิจกรรมล่าสุด" style={{ marginBottom: '24px' }}>
-              <Text type="secondary">ยังไม่มีข้อมูลกิจกรรม</Text>
+
+            <Card
+              title="กิจกรรมล่าสุด"
+              style={{ marginBottom: '24px' }}
+              extra={
+                <Button
+                  type="link"
+                  size="small"
+                  onClick={() => {
+                    fetchRecentActivities();
+                  }}
+                >
+                  รีเฟรช
+                </Button>
+              }
+            >
+              <Spin spinning={activitiesLoading}>
+                {recentActivities.length > 0 ? (
+                  <List
+                    itemLayout="horizontal"
+                    dataSource={recentActivities}
+                    renderItem={(activity) => {
+                      const getActivityIcon = (iconType) => {
+                        switch (iconType) {
+                          case 'user':
+                            return activity.action === 'created' ? <PlusOutlined /> : <EditOutlined />;
+                          case 'team':
+                            return activity.action === 'created' ? <PlusOutlined /> : <EditOutlined />;
+                          default:
+                            return <ClockCircleOutlined />;
+                        }
+                      };
+
+                      const getActivityColor = (action) => {
+                        return action === 'created' ? '#52c41a' : '#1890ff';
+                      };
+
+                      return (
+                        <List.Item>
+                          <List.Item.Meta
+                            avatar={
+                              <Avatar
+                                icon={getActivityIcon(activity.icon)}
+                                style={{
+                                  backgroundColor: getActivityColor(activity.action),
+                                  color: 'white'
+                                }}
+                                size="small"
+                              />
+                            }
+                            title={
+                              <Text strong style={{ fontSize: '14px' }}>
+                                {activity.title}
+                              </Text>
+                            }
+                            description={
+                              <div>
+                                <Text type="secondary" style={{ fontSize: '13px' }}>
+                                  {activity.description}
+                                </Text>
+                                <br />
+                                <Text type="secondary" style={{ fontSize: '12px' }}>
+                                  <ClockCircleOutlined style={{ marginRight: '4px' }} />
+                                  {new Date(activity.timestamp).toLocaleString('th-TH', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </Text>
+                              </div>
+                            }
+                          />
+                        </List.Item>
+                      );
+                    }}
+                  />
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                    <ClockCircleOutlined style={{ fontSize: '48px', color: '#d9d9d9', marginBottom: '16px' }} />
+                    <br />
+                    <Text type="secondary">ยังไม่มีกิจกรรมล่าสุด</Text>
+                    <br />
+                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                      เมื่อคุณเพิ่มหรือแก้ไขข้อมูลจะแสดงที่นี่
+                    </Text>
+                  </div>
+                )}
+              </Spin>
             </Card>
           </div>
         );
