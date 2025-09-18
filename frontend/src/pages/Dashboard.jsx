@@ -30,7 +30,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '../store/authSlice';
 import { dashboardAPI } from '../services/api';
-import AgentManagement from './AgentManagement';
+import AgentManagementNew from './AgentManagementNew';
 import CustomerManagement from './CustomerManagement';
 import ProjectManagement from './ProjectManagement';
 
@@ -56,7 +56,19 @@ const Dashboard = () => {
     try {
       setStatsLoading(true);
       const response = await dashboardAPI.getStats();
-      setDashboardStats(response);
+      console.log('Dashboard API response:', response);
+
+      // API returns nested structure: data.agents.total, data.customers.total
+      if (response.data) {
+        setDashboardStats({
+          totalAgents: response.data.agents.total,
+          pendingAgents: response.data.agents.pending,
+          activeAgents: response.data.agents.active,
+          totalCustomers: response.data.customers.total,
+          newCustomers: response.data.customers.new,
+          pendingCustomers: 0 // Not in current API
+        });
+      }
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
     } finally {
@@ -195,7 +207,7 @@ const Dashboard = () => {
           </div>
         );
       case 'agents':
-        return <AgentManagement />;
+        return <AgentManagementNew />;
       case 'customers':
         return <CustomerManagement />;
       case 'projects':

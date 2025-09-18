@@ -120,4 +120,5 @@ node_modules/
 
 # Database documentation (contains sensitive info)
 databaseset.md
+sqlguide.md
 *backup*.sql
