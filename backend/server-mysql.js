@@ -445,7 +445,7 @@ app.get('/api/agents', checkAuth, async (req, res) => {
       ],
       limit: parseInt(limit),
       offset: offset,
-      order: [['createdAt', 'DESC']]
+      order: [['created_at', 'DESC']]
     });
 
     res.json({
@@ -538,11 +538,103 @@ app.get('/api/agents/:id', checkAuth, async (req, res) => {
   }
 });
 
+// POST /api/agents - Create new agent (for admin use)
+app.post('/api/agents', checkAuth, async (req, res) => {
+  try {
+    const { email, password, firstName, lastName, phone, idCard } = req.body;
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'อีเมลนี้ถูกใช้แล้ว'
+      });
+    }
+
+    // Check if ID card already exists
+    const existingAgent = await Agent.findOne({ where: { idCard } });
+    if (existingAgent) {
+      return res.status(400).json({
+        success: false,
+        message: 'เลขบัตรประชาชนนี้ถูกใช้แล้ว'
+      });
+    }
+
+    // Check if phone already exists
+    if (phone) {
+      const existingPhone = await Agent.findOne({ where: { phone } });
+      if (existingPhone) {
+        return res.status(400).json({
+          success: false,
+          message: 'เบอร์โทรศัพท์นี้ถูกใช้แล้ว'
+        });
+      }
+    }
+
+    // Generate agent code
+    const lastAgent = await Agent.findOne({
+      order: [['agentCode', 'DESC']]
+    });
+
+    let nextNumber = 1;
+    if (lastAgent && lastAgent.agentCode) {
+      const lastNumber = parseInt(lastAgent.agentCode.replace('AG', ''));
+      nextNumber = lastNumber + 1;
+    }
+
+    const agentCode = `AG${nextNumber.toString().padStart(3, '0')}`;
+
+    // Create user
+    const user = await User.create({
+      email,
+      password,
+      role: 'agent'
+    });
+
+    // Create agent
+    const agent = await Agent.create({
+      userId: user.id,
+      agentCode,
+      idCard,
+      firstName,
+      lastName,
+      phone: phone || '',
+      registrationDate: new Date(),
+      status: 'active'
+    });
+
+    // Get agent with user info
+    const agentWithUser = await Agent.findByPk(agent.id, {
+      include: [
+        {
+          model: User,
+          attributes: ['email'],
+          required: false
+        }
+      ]
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'สร้างเอเจนต์ใหม่สำเร็จ',
+      data: agentWithUser
+    });
+
+  } catch (error) {
+    console.error('Create agent error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการสร้างเอเจนต์ใหม่'
+    });
+  }
+});
+
 // PUT /api/agents/:id - Update agent
 app.put('/api/agents/:id', checkAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { firstName, lastName, phone, status } = req.body;
+    const { agentCode, firstName, lastName, phone, status } = req.body;
 
     const agent = await Agent.findByPk(id);
 
@@ -553,8 +645,35 @@ app.put('/api/agents/:id', checkAuth, async (req, res) => {
       });
     }
 
+    // Check for duplicate agentCode (exclude current agent)
+    if (agentCode && agentCode !== agent.agentCode) {
+      const existingAgentCode = await Agent.findOne({
+        where: { agentCode, id: { [require('sequelize').Op.ne]: id } }
+      });
+      if (existingAgentCode) {
+        return res.status(400).json({
+          success: false,
+          message: 'รหัสเอเจนต์นี้มีอยู่ในระบบแล้ว'
+        });
+      }
+    }
+
+    // Check for duplicate phone (exclude current agent)
+    if (phone && phone !== agent.phone) {
+      const existingPhone = await Agent.findOne({
+        where: { phone, id: { [require('sequelize').Op.ne]: id } }
+      });
+      if (existingPhone) {
+        return res.status(400).json({
+          success: false,
+          message: 'เบอร์โทรศัพท์นี้มีอยู่ในระบบแล้ว'
+        });
+      }
+    }
+
     // Update agent
     await agent.update({
+      ...(agentCode && { agentCode }),
       ...(firstName && { firstName }),
       ...(lastName && { lastName }),
       ...(phone && { phone }),
@@ -583,6 +702,52 @@ app.put('/api/agents/:id', checkAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดในการอัพเดทข้อมูลเอเจนต์'
+    });
+  }
+});
+
+// DELETE /api/agents/:id - Delete agent
+app.delete('/api/agents/:id', checkAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const agent = await Agent.findByPk(id);
+
+    if (!agent) {
+      return res.status(404).json({
+        success: false,
+        message: 'ไม่พบข้อมูลเอเจนต์'
+      });
+    }
+
+    // Check if agent has customers
+    const customerCount = await Customer.count({ where: { agentId: id } });
+
+    if (customerCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `ไม่สามารถลบเอเจนต์ได้ เนื่องจากมีลูกค้าที่เชื่อมโยงอยู่ ${customerCount} ราย`
+      });
+    }
+
+    // Delete user account first (will cascade to agent due to foreign key)
+    if (agent.userId) {
+      await User.destroy({ where: { id: agent.userId } });
+    }
+
+    // Delete agent record
+    await agent.destroy();
+
+    res.json({
+      success: true,
+      message: 'ลบเอเจนต์สำเร็จ'
+    });
+
+  } catch (error) {
+    console.error('Delete agent error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการลบเอเจนต์'
     });
   }
 });
@@ -633,6 +798,449 @@ app.put('/api/agents/profile', checkAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดในการอัพเดทข้อมูลส่วนตัว'
+    });
+  }
+});
+
+// ==================== CUSTOMERS ENDPOINTS ====================
+
+// GET /api/customers - Get all customers
+app.get('/api/customers', checkAuth, async (req, res) => {
+  try {
+    const { page = 1, limit = 10, status, search, agentId } = req.query;
+
+    let whereCondition = {};
+
+    // Filter by status
+    if (status && status !== 'all') {
+      whereCondition.status = status;
+    }
+
+    // Filter by agent (for agents to see only their customers)
+    if (req.user.role === 'agent') {
+      const agent = await Agent.findOne({ where: { userId: req.user.id } });
+      if (agent) {
+        whereCondition.agentId = agent.id;
+      }
+    } else if (agentId && agentId !== 'all') {
+      whereCondition.agentId = agentId;
+    }
+
+    // Search by name, phone, or email
+    if (search) {
+      const { Op } = require('sequelize');
+      whereCondition[Op.or] = [
+        { firstName: { [Op.like]: `%${search}%` } },
+        { lastName: { [Op.like]: `%${search}%` } },
+        { phone: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } }
+      ];
+    }
+
+    const offset = (page - 1) * limit;
+
+    const { count, rows: customers } = await Customer.findAndCountAll({
+      where: whereCondition,
+      include: [
+        {
+          model: Agent,
+          attributes: ['id', 'agentCode', 'firstName', 'lastName'],
+          required: false
+        },
+        {
+          model: Project,
+          attributes: ['id', 'projectName'],
+          required: false
+        }
+      ],
+      limit: parseInt(limit),
+      offset: offset,
+      order: [['created_at', 'DESC']]
+    });
+
+    res.json({
+      success: true,
+      message: 'ดึงข้อมูลลูกค้าสำเร็จ',
+      data: customers,
+      pagination: {
+        current: parseInt(page),
+        pageSize: parseInt(limit),
+        total: count,
+        totalPages: Math.ceil(count / limit)
+      }
+    });
+
+  } catch (error) {
+    console.error('Get customers error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการดึงข้อมูลลูกค้า'
+    });
+  }
+});
+
+// POST /api/customers - Create new customer
+app.post('/api/customers', checkAuth, async (req, res) => {
+  try {
+    const {
+      customerCode, firstName, lastName, phone, email, idCard,
+      agentId, projectId, budgetMin, budgetMax,
+      status = 'new', source = 'referral', notes
+    } = req.body;
+
+    // Check for duplicate customerCode
+    if (customerCode) {
+      const existingCustomerCode = await Customer.findOne({ where: { customerCode } });
+      if (existingCustomerCode) {
+        return res.status(400).json({
+          success: false,
+          message: 'รหัสลูกค้านี้มีอยู่ในระบบแล้ว'
+        });
+      }
+    }
+
+    // Check for duplicate phone
+    if (phone) {
+      const existingPhone = await Customer.findOne({ where: { phone } });
+      if (existingPhone) {
+        return res.status(400).json({
+          success: false,
+          message: 'เบอร์โทรศัพท์นี้มีอยู่ในระบบแล้ว'
+        });
+      }
+    }
+
+    // Check for duplicate email
+    if (email) {
+      const existingEmail = await Customer.findOne({ where: { email } });
+      if (existingEmail) {
+        return res.status(400).json({
+          success: false,
+          message: 'อีเมลนี้มีอยู่ในระบบแล้ว'
+        });
+      }
+    }
+
+    // Check for duplicate ID card
+    if (idCard) {
+      const existingIdCard = await Customer.findOne({ where: { idCard } });
+      if (existingIdCard) {
+        return res.status(400).json({
+          success: false,
+          message: 'เลขบัตรประชาชนนี้มีอยู่ในระบบแล้ว'
+        });
+      }
+    }
+
+    // Verify agent exists
+    if (agentId) {
+      const agent = await Agent.findByPk(agentId);
+      if (!agent) {
+        return res.status(400).json({
+          success: false,
+          message: 'ไม่พบเอเจนต์ที่ระบุ'
+        });
+      }
+    }
+
+    // Create customer
+    const customer = await Customer.create({
+      customerCode: customerCode || null,
+      firstName,
+      lastName,
+      phone: phone || null,
+      email: email || null,
+      idCard: idCard || null,
+      agentId: agentId || null,
+      projectId: projectId || null,
+      budgetMin: budgetMin || null,
+      budgetMax: budgetMax || null,
+      status,
+      source,
+      notes: notes || null,
+      createdBy: req.user.id,
+      updatedBy: req.user.id
+    });
+
+    // Get customer with relations
+    const customerWithRelations = await Customer.findByPk(customer.id, {
+      include: [
+        {
+          model: Agent,
+          attributes: ['id', 'agentCode', 'firstName', 'lastName'],
+          required: false
+        },
+        {
+          model: Project,
+          attributes: ['id', 'projectName'],
+          required: false
+        }
+      ]
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'สร้างลูกค้าใหม่สำเร็จ',
+      data: customerWithRelations
+    });
+
+  } catch (error) {
+    console.error('Create customer error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการสร้างลูกค้าใหม่'
+    });
+  }
+});
+
+// GET /api/customers/:id - Get customer by ID
+app.get('/api/customers/:id', checkAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const customer = await Customer.findByPk(id, {
+      include: [
+        {
+          model: Agent,
+          attributes: ['id', 'agentCode', 'firstName', 'lastName'],
+          required: false
+        },
+        {
+          model: Project,
+          attributes: ['id', 'projectName'],
+          required: false
+        }
+      ]
+    });
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: 'ไม่พบข้อมูลลูกค้า'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'ดึงข้อมูลลูกค้าสำเร็จ',
+      data: customer
+    });
+
+  } catch (error) {
+    console.error('Get customer error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการดึงข้อมูลลูกค้า'
+    });
+  }
+});
+
+// PUT /api/customers/:id - Update customer
+app.put('/api/customers/:id', checkAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      customerCode, firstName, lastName, phone, email, idCard,
+      agentId, projectId, budgetMin, budgetMax,
+      status, source, notes
+    } = req.body;
+
+    const customer = await Customer.findByPk(id);
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: 'ไม่พบข้อมูลลูกค้า'
+      });
+    }
+
+    // Check for duplicate customerCode (exclude current customer)
+    if (customerCode && customerCode !== customer.customerCode) {
+      const existingCustomerCode = await Customer.findOne({
+        where: { customerCode, id: { [require('sequelize').Op.ne]: id } }
+      });
+      if (existingCustomerCode) {
+        return res.status(400).json({
+          success: false,
+          message: 'รหัสลูกค้านี้มีอยู่ในระบบแล้ว'
+        });
+      }
+    }
+
+    // Check for duplicate phone (exclude current customer)
+    if (phone && phone !== customer.phone) {
+      const existingPhone = await Customer.findOne({
+        where: { phone, id: { [require('sequelize').Op.ne]: id } }
+      });
+      if (existingPhone) {
+        return res.status(400).json({
+          success: false,
+          message: 'เบอร์โทรศัพท์นี้มีอยู่ในระบบแล้ว'
+        });
+      }
+    }
+
+    // Check for duplicate email (exclude current customer)
+    if (email && email !== customer.email) {
+      const existingEmail = await Customer.findOne({
+        where: { email, id: { [require('sequelize').Op.ne]: id } }
+      });
+      if (existingEmail) {
+        return res.status(400).json({
+          success: false,
+          message: 'อีเมลนี้มีอยู่ในระบบแล้ว'
+        });
+      }
+    }
+
+    // Check for duplicate ID card (exclude current customer)
+    if (idCard && idCard !== customer.idCard) {
+      const existingIdCard = await Customer.findOne({
+        where: { idCard, id: { [require('sequelize').Op.ne]: id } }
+      });
+      if (existingIdCard) {
+        return res.status(400).json({
+          success: false,
+          message: 'เลขบัตรประชาชนนี้มีอยู่ในระบบแล้ว'
+        });
+      }
+    }
+
+    // Update customer
+    await customer.update({
+      ...(customerCode !== undefined && { customerCode: customerCode || null }),
+      ...(firstName && { firstName }),
+      ...(lastName && { lastName }),
+      ...(phone !== undefined && { phone: phone || null }),
+      ...(email !== undefined && { email: email || null }),
+      ...(idCard !== undefined && { idCard: idCard || null }),
+      ...(agentId !== undefined && { agentId: agentId || null }),
+      ...(projectId !== undefined && { projectId: projectId || null }),
+      ...(budgetMin !== undefined && { budgetMin: budgetMin || null }),
+      ...(budgetMax !== undefined && { budgetMax: budgetMax || null }),
+      ...(status && { status }),
+      ...(source && { source }),
+      ...(notes !== undefined && { notes: notes || null }),
+      updatedBy: req.user.id
+    });
+
+    // Get updated customer with relations
+    const updatedCustomer = await Customer.findByPk(id, {
+      include: [
+        {
+          model: Agent,
+          attributes: ['id', 'agentCode', 'firstName', 'lastName'],
+          required: false
+        },
+        {
+          model: Project,
+          attributes: ['id', 'projectName'],
+          required: false
+        }
+      ]
+    });
+
+    res.json({
+      success: true,
+      message: 'อัพเดทข้อมูลลูกค้าสำเร็จ',
+      data: updatedCustomer
+    });
+
+  } catch (error) {
+    console.error('Update customer error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการอัพเดทข้อมูลลูกค้า'
+    });
+  }
+});
+
+// DELETE /api/customers/:id - Delete customer
+app.delete('/api/customers/:id', checkAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const customer = await Customer.findByPk(id);
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: 'ไม่พบข้อมูลลูกค้า'
+      });
+    }
+
+    // Delete customer
+    await customer.destroy();
+
+    res.json({
+      success: true,
+      message: 'ลบลูกค้าสำเร็จ'
+    });
+
+  } catch (error) {
+    console.error('Delete customer error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการลบลูกค้า'
+    });
+  }
+});
+
+// GET /api/dashboard/stats - Get dashboard statistics
+app.get('/api/dashboard/stats', checkAuth, async (req, res) => {
+  try {
+    // Count total agents
+    const totalAgents = await Agent.count();
+
+    // Count pending agents (inactive status)
+    const pendingAgents = await Agent.count({
+      where: { status: 'inactive' }
+    });
+
+    // Count active agents
+    const activeAgents = await Agent.count({
+      where: { status: 'active' }
+    });
+
+    // Count total customers
+    const totalCustomers = await Customer.count();
+
+    // Count new customers (status: new)
+    const newCustomers = await Customer.count({
+      where: { status: 'new' }
+    });
+
+    // Count customers by status
+    const customersByStatus = await Customer.findAll({
+      attributes: [
+        'status',
+        [require('sequelize').fn('COUNT', require('sequelize').col('id')), 'count']
+      ],
+      group: ['status']
+    });
+
+    res.json({
+      success: true,
+      message: 'ดึงสถิติ Dashboard สำเร็จ',
+      data: {
+        agents: {
+          total: totalAgents,
+          active: activeAgents,
+          pending: pendingAgents
+        },
+        customers: {
+          total: totalCustomers,
+          new: newCustomers,
+          byStatus: customersByStatus
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Get dashboard stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการดึงสถิติ Dashboard'
     });
   }
 });

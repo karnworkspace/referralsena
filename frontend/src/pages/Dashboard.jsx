@@ -1,17 +1,18 @@
-import React, { useState } from 'react';
-import { 
-  Layout, 
-  Menu, 
-  Button, 
-  Avatar, 
-  Dropdown, 
-  Typography, 
-  Card, 
-  Row, 
-  Col, 
+import React, { useState, useEffect } from 'react';
+import {
+  Layout,
+  Menu,
+  Button,
+  Avatar,
+  Dropdown,
+  Typography,
+  Card,
+  Row,
+  Col,
   Statistic,
   Space,
-  Badge
+  Badge,
+  Spin
 } from 'antd';
 import {
   MenuFoldOutlined,
@@ -28,6 +29,7 @@ import {
 } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '../store/authSlice';
+import { dashboardAPI } from '../services/api';
 import AgentManagement from './AgentManagement';
 import CustomerManagement from './CustomerManagement';
 import ProjectManagement from './ProjectManagement';
@@ -40,6 +42,33 @@ const Dashboard = () => {
   const { user } = useSelector((state) => state.auth);
   const [collapsed, setCollapsed] = useState(false);
   const [selectedMenu, setSelectedMenu] = useState('dashboard');
+  const [dashboardStats, setDashboardStats] = useState({
+    totalAgents: 0,
+    pendingAgents: 0,
+    activeAgents: 0,
+    totalCustomers: 0,
+    newCustomers: 0,
+    pendingCustomers: 0
+  });
+  const [statsLoading, setStatsLoading] = useState(false);
+
+  const fetchDashboardStats = async () => {
+    try {
+      setStatsLoading(true);
+      const response = await dashboardAPI.getStats();
+      setDashboardStats(response);
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedMenu === 'dashboard') {
+      fetchDashboardStats();
+    }
+  }, [selectedMenu]);
 
   const handleLogout = () => {
     dispatch(logoutUser());
@@ -101,53 +130,64 @@ const Dashboard = () => {
       case 'dashboard':
         return (
           <div>
-            <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-              <Col xs={24} sm={12} lg={8}>
-                <Card>
-                  <Statistic
-                    title="เอเจนต์ทั้งหมด"
-                    value={4}
-                    valueStyle={{ color: '#3f8600' }}
-                  />
-                </Card>
-              </Col>
-              <Col xs={24} sm={12} lg={8}>
-                <Card>
-                  <Statistic
-                    title="เอเจนต์รออนุมัติ"
-                    value={1}
-                    valueStyle={{ color: '#fa8c16' }}
-                  />
-                  <div style={{ marginTop: '8px' }}>
-                    <Button
-                      type="link"
-                      size="small"
-                      onClick={() => setSelectedMenu('agents')}
-                    >
-                      ดูรายละเอียด →
-                    </Button>
-                  </div>
-                </Card>
-              </Col>
-              <Col xs={24} sm={12} lg={8}>
-                <Card>
-                  <Statistic
-                    title="ลูกค้าใหม่"
-                    value={5}
-                    valueStyle={{ color: '#1890ff' }}
-                  />
-                  <div style={{ marginTop: '8px' }}>
-                    <Button
-                      type="link"
-                      size="small"
-                      onClick={() => setSelectedMenu('customers')}
-                    >
-                      ดูรายละเอียด →
-                    </Button>
-                  </div>
-                </Card>
-              </Col>
-            </Row>
+            <Spin spinning={statsLoading}>
+              <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+                <Col xs={24} sm={12} lg={6}>
+                  <Card>
+                    <Statistic
+                      title="เอเจนต์ทั้งหมด"
+                      value={dashboardStats.totalAgents}
+                      valueStyle={{ color: '#3f8600' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                  <Card>
+                    <Statistic
+                      title="เอเจนต์รออนุมัติ"
+                      value={dashboardStats.pendingAgents}
+                      valueStyle={{ color: '#fa8c16' }}
+                    />
+                    <div style={{ marginTop: '8px' }}>
+                      <Button
+                        type="link"
+                        size="small"
+                        onClick={() => setSelectedMenu('agents')}
+                      >
+                        ดูรายละเอียด →
+                      </Button>
+                    </div>
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                  <Card>
+                    <Statistic
+                      title="เอเจนต์ที่อนุมัติแล้ว"
+                      value={dashboardStats.activeAgents}
+                      valueStyle={{ color: '#52c41a' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                  <Card>
+                    <Statistic
+                      title="ลูกค้าทั้งหมด"
+                      value={dashboardStats.totalCustomers}
+                      valueStyle={{ color: '#1890ff' }}
+                    />
+                    <div style={{ marginTop: '8px' }}>
+                      <Button
+                        type="link"
+                        size="small"
+                        onClick={() => setSelectedMenu('customers')}
+                      >
+                        ดูรายละเอียด →
+                      </Button>
+                    </div>
+                  </Card>
+                </Col>
+              </Row>
+            </Spin>
             
             <Card title="กิจกรรมล่าสุด" style={{ marginBottom: '24px' }}>
               <Text type="secondary">ยังไม่มีข้อมูลกิจกรรม</Text>

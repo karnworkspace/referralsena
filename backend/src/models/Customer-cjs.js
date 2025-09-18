@@ -16,6 +16,12 @@ const Customer = sequelize.define('Customer', {
       key: 'id'
     }
   },
+  customerCode: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+    unique: true,
+    field: 'customer_code'
+  },
   firstName: {
     type: DataTypes.STRING(50),
     allowNull: false,

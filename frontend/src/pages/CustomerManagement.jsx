@@ -65,15 +65,22 @@ const getStatusTag = (status) => {
 
 const CustomerManagement = () => {
   const dispatch = useDispatch();
-  const { 
-    customers, 
+  const {
+    customers,
     agentsList,
-    loading, 
+    loading,
     agentsLoading,
-    error, 
-    pagination, 
-    filters 
+    error,
+    pagination,
+    filters
   } = useSelector((state) => state.customers);
+
+  console.log('=== CustomerManagement render ===', {
+    customers,
+    loading,
+    error,
+    customersLength: customers?.length
+  });
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);

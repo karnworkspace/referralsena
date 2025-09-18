@@ -8,6 +8,12 @@ const sequelize = new Sequelize({
   username: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   dialect: 'mysql',
+  dialectOptions: {
+    charset: 'utf8mb4',
+    collate: 'utf8mb4_unicode_ci',
+    supportBigNumbers: true,
+    bigNumberStrings: true
+  },
   timezone: '+07:00', // Bangkok timezone
   logging: process.env.NODE_ENV === 'development' ? console.log : false,
   pool: {

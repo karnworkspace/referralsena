@@ -89,6 +89,11 @@ export const projectsAPI = {
   delete: (id) => api.delete(`/projects/${id}`),
 };
 
+// Dashboard API
+export const dashboardAPI = {
+  getStats: () => api.get('/dashboard/stats'),
+};
+
 // Health check
 export const healthAPI = {
   check: () => axios.get(`${ORIGIN}/health`),
