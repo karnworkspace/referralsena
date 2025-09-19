@@ -37,6 +37,10 @@ import { dashboardAPI } from '../services/api';
 import AgentManagementNew from './AgentManagementNew';
 import CustomerManagement from './CustomerManagement';
 import ProjectManagement from './ProjectManagement';
+import StatisticsBarChart from '../components/charts/StatisticsBarChart';
+import CustomerStatusPieChart from '../components/charts/CustomerStatusPieChart';
+import TrendLineChart from '../components/charts/TrendLineChart';
+import PerformanceAreaChart from '../components/charts/PerformanceAreaChart';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -165,6 +169,26 @@ const Dashboard = () => {
       case 'dashboard':
         return (
           <div>
+            {/* Charts Section - ย้ายมาด้านบนสุด */}
+            <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+              <Col xs={24} lg={12}>
+                <StatisticsBarChart data={dashboardStats} title="สถิติรวม" />
+              </Col>
+              <Col xs={24} lg={12}>
+                <CustomerStatusPieChart data={dashboardStats} title="สัดส่วนสถานะลูกค้า" />
+              </Col>
+            </Row>
+
+            <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+              <Col xs={24} lg={12}>
+                <TrendLineChart data={dashboardStats} title="แนวโน้มรายเดือน" />
+              </Col>
+              <Col xs={24} lg={12}>
+                <PerformanceAreaChart data={dashboardStats} title="ผลงานรายสัปดาห์" />
+              </Col>
+            </Row>
+
+            {/* Statistics Cards */}
             <Spin spinning={statsLoading}>
               <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
                 <Col xs={24} sm={12} lg={6}>

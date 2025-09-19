@@ -48,15 +48,9 @@ const { TextArea } = Input;
 
 const getStatusTag = (status) => {
   const statusMap = {
-    new: { color: 'blue', text: 'ใหม่' },
-    contacted: { color: 'cyan', text: 'ติดต่อแล้ว' },
-    interested: { color: 'geekblue', text: 'สนใจ' },
-    visit_scheduled: { color: 'purple', text: 'นัดหมายแล้ว' },
-    visited: { color: 'magenta', text: 'เยี่ยมชมแล้ว' },
-    negotiating: { color: 'gold', text: 'กำลังเจรจา' },
-    closed_won: { color: 'green', text: 'ขายสำเร็จ' },
-    closed_lost: { color: 'red', text: 'ขายไม่สำเร็จ' },
-    pending: { color: 'orange', text: 'รออนุมัติ' },
+    active: { color: 'green', text: 'ใช้งาน' },
+    inactive: { color: 'red', text: 'ไม่ใช้งาน' },
+    pending: { color: 'orange', text: 'รออนุมัติ' }
   };
 
   const { color, text } = statusMap[status] || { color: 'default', text: status };
@@ -319,7 +313,8 @@ const CustomerManagement = () => {
       address: customer.address,
       agentId: customer.agentId,
       status: customer.status,
-      registrationDate: customer.registrationDate
+      registrationDate: customer.registrationDate ?
+        new Date(customer.registrationDate).toISOString().split('T')[0] : ''
     });
   };
 
@@ -431,14 +426,8 @@ const CustomerManagement = () => {
               onChange={handleStatusFilter}
             >
               <Option value="all">ทั้งหมด</Option>
-              <Option value="new">ใหม่</Option>
-              <Option value="contacted">ติดต่อแล้ว</Option>
-              <Option value="interested">สนใจ</Option>
-              <Option value="visit_scheduled">นัดหมายแล้ว</Option>
-              <Option value="visited">เยี่ยมชมแล้ว</Option>
-              <Option value="negotiating">กำลังเจรจา</Option>
-              <Option value="closed_won">ขายสำเร็จ</Option>
-              <Option value="closed_lost">ขายไม่สำเร็จ</Option>
+              <Option value="active">ใช้งาน</Option>
+              <Option value="inactive">ไม่ใช้งาน</Option>
               <Option value="pending">รออนุมัติ</Option>
             </Select>
           </Col>
@@ -517,14 +506,8 @@ const CustomerManagement = () => {
                 rules={[{ required: true, message: 'กรุณาเลือกสถานะ' }]}
               >
                 <Select placeholder="เลือกสถานะ">
-                  <Option value="new">ใหม่</Option>
-                  <Option value="contacted">ติดต่อแล้ว</Option>
-                  <Option value="interested">สนใจ</Option>
-                  <Option value="visit_scheduled">นัดหมายแล้ว</Option>
-                  <Option value="visited">เยี่ยมชมแล้ว</Option>
-                  <Option value="negotiating">กำลังเจรจา</Option>
-                  <Option value="closed_won">ขายสำเร็จ</Option>
-                  <Option value="closed_lost">ขายไม่สำเร็จ</Option>
+                  <Option value="active">ใช้งาน</Option>
+                  <Option value="inactive">ไม่ใช้งาน</Option>
                   <Option value="pending">รออนุมัติ</Option>
                 </Select>
               </Form.Item>
@@ -607,10 +590,10 @@ const CustomerManagement = () => {
               <Form.Item
                 name="registrationDate"
                 label="วันที่ลงทะเบียน"
-                rules={[{ required: true, message: 'กรุณาใส่วันที่ลงทะเบียน' }]}
+                rules={editingCustomer ? [] : [{ required: true, message: 'กรุณาใส่วันที่ลงทะเบียน' }]}
               >
-                <Input 
-                  type="date" 
+                <Input
+                  type="date"
                   disabled={!!editingCustomer}
                 />
               </Form.Item>

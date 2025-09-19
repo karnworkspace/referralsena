@@ -17,6 +17,8 @@ import {
   Popconfirm,
   Tooltip
 } from 'antd';
+
+const { Text } = Typography;
 import {
   PlusOutlined,
   EditOutlined,
@@ -27,7 +29,9 @@ import {
   UserOutlined,
   IdcardOutlined,
   CheckCircleOutlined,
-  ClockCircleOutlined
+  ClockCircleOutlined,
+  CheckOutlined,
+  CloseOutlined
 } from '@ant-design/icons';
 import {
   fetchAgents,
@@ -47,6 +51,16 @@ const AgentManagementNew = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingAgent, setEditingAgent] = useState(null);
   const [form] = Form.useForm();
+
+  // States for agent detail modal
+  const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState(null);
+
+  // Debug modal state changes
+  useEffect(() => {
+    console.log('Modal visibility changed:', isDetailModalVisible);
+    console.log('Selected agent:', selectedAgent);
+  }, [isDetailModalVisible, selectedAgent]);
 
   useEffect(() => {
     dispatch(fetchAgents({
@@ -153,12 +167,68 @@ const AgentManagementNew = () => {
     }
   };
 
+  const handleApproveAgent = async (agent, newStatus) => {
+    try {
+      await dispatch(updateAgent({
+        id: agent.id,
+        agentData: { ...agent, status: newStatus }
+      })).unwrap();
+
+      const statusText = newStatus === 'active' ? 'อนุมัติ' : 'ปฏิเสธ';
+      notification.success({
+        message: 'สำเร็จ',
+        description: `${statusText}เอเจนต์ ${agent.firstName} ${agent.lastName} แล้ว`,
+      });
+    } catch (error) {
+      notification.error({
+        message: 'เกิดข้อผิดพลาด',
+        description: error || 'ไม่สามารถอัพเดทสถานะได้',
+      });
+    }
+  };
+
+  // Handle agent detail modal
+  const handleShowDetail = (agent, event) => {
+    console.log('handleShowDetail called with agent:', agent);
+    console.log('Event:', event);
+
+    try {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      // Ensure we have valid agent data
+      if (!agent) {
+        console.error('No agent data provided');
+        return;
+      }
+
+      console.log('Setting selected agent:', agent);
+      setSelectedAgent(agent);
+
+      console.log('Setting modal visible to true');
+      setIsDetailModalVisible(true);
+
+      console.log('Modal should be opening now');
+    } catch (error) {
+      console.error('Error in handleShowDetail:', error);
+    }
+  };
+
+  const handleCloseDetail = () => {
+    setIsDetailModalVisible(false);
+    setSelectedAgent(null);
+  };
+
   const getStatusTag = (status) => {
     switch (status) {
       case 'active':
         return <Tag icon={<CheckCircleOutlined />} color="green">ใช้งาน</Tag>;
       case 'inactive':
         return <Tag icon={<ClockCircleOutlined />} color="orange">รออนุมัติ</Tag>;
+      case 'suspended':
+        return <Tag icon={<CloseOutlined />} color="red">ปฏิเสธ</Tag>;
       default:
         return <Tag color="default">{status}</Tag>;
     }
@@ -170,17 +240,35 @@ const AgentManagementNew = () => {
       dataIndex: 'agentCode',
       key: 'agentCode',
       width: 120,
-      render: (text, record) => text || `#${record.id}`
+      render: (text, record) => (
+        <span
+          style={{
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            color: '#1890ff',
+            textDecoration: 'underline'
+          }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setTimeout(() => {
+              handleShowDetail(record, e);
+            }, 0);
+          }}
+        >
+          {text || `#${record.id}`}
+        </span>
+      )
     },
     {
       title: 'ชื่อ-นามสกุล',
       key: 'name',
       width: 200,
       render: (_, record) => (
-        <Space>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <UserOutlined />
           <span>{record.firstName} {record.lastName}</span>
-        </Space>
+        </div>
       )
     },
     {
@@ -219,85 +307,131 @@ const AgentManagementNew = () => {
     {
       title: 'จัดการ',
       key: 'action',
-      width: 120,
+      width: 200,
       render: (_, record) => (
-        <Space size="middle">
-          <Tooltip title="แก้ไข">
-            <Button
-              type="link"
-              icon={<EditOutlined />}
-              onClick={() => handleEdit(record)}
-              size="small"
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          {/* Approval Section - แสดงเฉพาะ Agent ที่สถานะ inactive */}
+          <div style={{ display: 'flex', gap: '4px', minWidth: '70px' }}>
+            {record.status === 'inactive' && (
+              <>
+                <Popconfirm
+                  title="อนุมัติเอเจนต์"
+                  description={`คุณต้องการอนุมัติ ${record.firstName} ${record.lastName} หรือไม่?`}
+                  onConfirm={() => handleApproveAgent(record, 'active')}
+                  okText="อนุมัติ"
+                  cancelText="ยกเลิก"
+                  okButtonProps={{ type: 'primary' }}
+                >
+                  <Tooltip title="อนุมัติ">
+                    <Button
+                      type="primary"
+                      icon={<CheckOutlined />}
+                      size="small"
+                      style={{
+                        backgroundColor: '#52c41a',
+                        borderColor: '#52c41a',
+                        color: 'white',
+                        width: '32px',
+                        height: '24px'
+                      }}
+                    />
+                  </Tooltip>
+                </Popconfirm>
+
+                <Popconfirm
+                  title="ปฏิเสธเอเจนต์"
+                  description={`คุณต้องการปฏิเสธ ${record.firstName} ${record.lastName} หรือไม่?`}
+                  onConfirm={() => handleApproveAgent(record, 'suspended')}
+                  okText="ปฏิเสธ"
+                  cancelText="ยกเลิก"
+                  okButtonProps={{ danger: true }}
+                >
+                  <Tooltip title="ปฏิเสธ">
+                    <Button
+                      danger
+                      icon={<CloseOutlined />}
+                      size="small"
+                      style={{
+                        width: '32px',
+                        height: '24px'
+                      }}
+                    />
+                  </Tooltip>
+                </Popconfirm>
+              </>
+            )}
+          </div>
+
+          {/* Standard Actions Section - อยู่ตำแหน่งคงที่ */}
+          <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto' }}>
+            <Tooltip title="แก้ไข">
+              <Button
+                type="link"
+                icon={<EditOutlined />}
+                onClick={() => handleEdit(record)}
+                size="small"
+                style={{ padding: '4px 8px' }}
+              >
+                แก้ไข
+              </Button>
+            </Tooltip>
+
+            <Popconfirm
+              title="ลบเอเจนต์"
+              description="คุณแน่ใจหรือไม่ที่จะลบเอเจนต์นี้?"
+              onConfirm={() => handleDelete(record.id)}
+              okText="ใช่"
+              cancelText="ไม่"
             >
-              แก้ไข
-            </Button>
-          </Tooltip>
-          <Popconfirm
-            title="ลบเอเจนต์"
-            description="คุณแน่ใจหรือไม่ที่จะลบเอเจนต์นี้?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="ใช่"
-            cancelText="ไม่"
-          >
-            <Button type="link" danger icon={<DeleteOutlined />} size="small">
-              ลบ
-            </Button>
-          </Popconfirm>
-        </Space>
+              <Button
+                type="link"
+                danger
+                icon={<DeleteOutlined />}
+                size="small"
+                style={{ padding: '4px 8px' }}
+              >
+                ลบ
+              </Button>
+            </Popconfirm>
+          </div>
+        </div>
       ),
     },
   ];
 
   return (
-    <div style={{ backgroundColor: '#f0f2f5', minHeight: '100vh', padding: 0 }}>
-      {/* Header */}
-      <Card
-        style={{
-          marginBottom: 24,
-          borderRadius: 0,
-          boxShadow: '0 1px 4px rgba(0,21,41,.08)'
-        }}
-        styles={{ body: { padding: '24px' } }}
-      >
-        <Row justify="space-between" align="middle">
-          <Col>
-            <Title level={2} style={{ margin: 0 }}>
-              จัดการเอเจนต์
-            </Title>
-          </Col>
-          <Col>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleAdd}
-            >
-              เพิ่มเอเจนต์
-            </Button>
-          </Col>
-        </Row>
-      </Card>
+    <div style={{ padding: '24px' }}>
+      <Card>
+        <div style={{ marginBottom: '16px' }}>
+          <Row justify="space-between" align="middle">
+            <Col>
+              <Title level={3} style={{ margin: 0 }}>
+                จัดการเอเจนต์
+              </Title>
+            </Col>
+            <Col>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleAdd}
+              >
+                เพิ่มเอเจนต์ใหม่
+              </Button>
+            </Col>
+          </Row>
+        </div>
 
-      {/* Search and Filters */}
-      <Card
-        style={{
-          margin: '0 24px 24px 24px',
-          borderRadius: 8,
-          boxShadow: '0 1px 4px rgba(0,21,41,.08)'
-        }}
-        styles={{ body: { padding: '24px' } }}
-      >
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={24} md={12} lg={8}>
+        {/* Filters */}
+        <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
+          <Col xs={24} sm={12} md={8}>
             <Input.Search
               placeholder="ค้นหาเอเจนต์ด้วยชื่อหรือรหัส..."
               allowClear
               enterButton={<SearchOutlined />}
-              size="middle"
               onSearch={handleSearch}
-              style={{ width: '100%' }}
             />
           </Col>
-          <Col xs={24} sm={24} md={12} lg={16}>
+          <Col xs={24} sm={12} md={16}>
             <Space wrap>
               <Button
                 type={statusFilter === 'all' ? 'primary' : 'default'}
@@ -317,20 +451,17 @@ const AgentManagementNew = () => {
               >
                 รออนุมัติ
               </Button>
+              <Button
+                type={statusFilter === 'suspended' ? 'primary' : 'default'}
+                onClick={() => handleStatusFilter('suspended')}
+              >
+                ปฏิเสธ
+              </Button>
             </Space>
           </Col>
         </Row>
-      </Card>
 
-      {/* Table */}
-      <Card
-        style={{
-          margin: '0 24px',
-          borderRadius: 8,
-          boxShadow: '0 1px 4px rgba(0,21,41,.08)'
-        }}
-        styles={{ body: { padding: 0 } }}
-      >
+        {/* Table */}
         <Table
           columns={columns}
           dataSource={agents}
@@ -462,6 +593,107 @@ const AgentManagementNew = () => {
             </Space>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Agent Detail Modal */}
+      <Modal
+        title="รายละเอียดเอเจนต์"
+        open={isDetailModalVisible}
+        onCancel={handleCloseDetail}
+        footer={[
+          <Button key="close" onClick={handleCloseDetail}>
+            ปิด
+          </Button>
+        ]}
+        width={600}
+        styles={{ body: { padding: '24px' } }}
+        destroyOnClose={true}
+      >
+        {selectedAgent ? (
+          <div>
+            <Row gutter={16}>
+              <Col span={12}>
+                <div style={{ marginBottom: '16px' }}>
+                  <Text strong>รหัสเอเจนต์:</Text>
+                  <br />
+                  <Text style={{ fontSize: '16px' }}>
+                    {selectedAgent.agentCode || `#${selectedAgent.id || 'N/A'}`}
+                  </Text>
+                </div>
+              </Col>
+              <Col span={12}>
+                <div style={{ marginBottom: '16px' }}>
+                  <Text strong>สถานะ:</Text>
+                  <br />
+                  {selectedAgent.status ? getStatusTag(selectedAgent.status) : <Text>ไม่ระบุ</Text>}
+                </div>
+              </Col>
+            </Row>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <div style={{ marginBottom: '16px' }}>
+                  <Text strong>ชื่อ:</Text>
+                  <br />
+                  <Text style={{ fontSize: '16px' }}>{selectedAgent.firstName}</Text>
+                </div>
+              </Col>
+              <Col span={12}>
+                <div style={{ marginBottom: '16px' }}>
+                  <Text strong>นามสกุล:</Text>
+                  <br />
+                  <Text style={{ fontSize: '16px' }}>{selectedAgent.lastName}</Text>
+                </div>
+              </Col>
+            </Row>
+
+            <div style={{ marginBottom: '16px' }}>
+              <Text strong>อีเมล:</Text>
+              <br />
+              <Text style={{ fontSize: '16px' }}>{selectedAgent.email}</Text>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <Text strong>เบอร์โทร:</Text>
+              <br />
+              <Text style={{ fontSize: '16px' }}>{selectedAgent.phone || '-'}</Text>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <Text strong>วันที่ลงทะเบียน:</Text>
+              <br />
+              <Text style={{ fontSize: '16px' }}>
+                {selectedAgent.registrationDate ?
+                  new Date(selectedAgent.registrationDate).toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  }) : 'Invalid Date'
+                }
+              </Text>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <Text strong>เลขประจำตัวประชาชน:</Text>
+              <br />
+              <Text style={{ fontSize: '16px' }}>{selectedAgent.idCard || '-'}</Text>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <Text strong>ข้อโครงการ:</Text>
+              <br />
+              <Text style={{ fontSize: '16px' }}>-</Text>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <Text strong>ข้อมูล:</Text>
+            </div>
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <Text type="secondary">กำลังโหลดข้อมูล...</Text>
+          </div>
+        )}
       </Modal>
     </div>
   );
