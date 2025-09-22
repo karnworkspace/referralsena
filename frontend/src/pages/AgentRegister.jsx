@@ -50,7 +50,6 @@ const AgentRegister = () => {
         duration: 5,
       });
     } catch (error) {
-      console.log('Registration error:', error);
       
       // Check if it's a duplicate data error
       if (error.errorType && error.existingData) {

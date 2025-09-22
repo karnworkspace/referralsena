@@ -6,37 +6,71 @@ import {
   Col,
   Typography,
   Table,
-  Tag
+  Tag,
+  Space,
+  Popconfirm,
+  message
 } from 'antd';
-import { PlusOutlined, ProjectOutlined } from '@ant-design/icons';
+import { PlusOutlined, ProjectOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import ProjectForm from './ProjectForm';
 
 const { Title } = Typography;
 
 const ProjectManagement = () => {
   const [view, setView] = useState('list'); // 'list' or 'form'
+  const [editingProject, setEditingProject] = useState(null);
   const [projects, setProjects] = useState([
     { id: 1, projectName: 'Sena Village Tiwanon', location: 'Tiwanon Road, Nonthaburi', status: 'active' },
     { id: 2, projectName: 'Sena Park Grand Ramindra', location: 'Ramindra Road, Bangkok', status: 'inactive' }
   ]);
 
   const handleCreate = () => {
+    setEditingProject(null);
     setView('form');
+  };
+
+  const handleEdit = (project) => {
+    setEditingProject(project);
+    setView('form');
+  };
+
+  const handleDelete = (projectId) => {
+    setProjects(prevProjects => prevProjects.filter(p => p.id !== projectId));
+    message.success('ลบโครงการสำเร็จ');
   };
 
   const handleBack = () => {
     setView('list');
+    setEditingProject(null);
   };
 
-  const handleSaveProject = (newProject) => {
-    setProjects(prevProjects => [
-      ...prevProjects,
-      { id: Date.now(), ...newProject } // Use timestamp for a more unique ID
-    ]);
+  const handleSaveProject = (projectData) => {
+    if (editingProject) {
+      // Update existing project
+      setProjects(prevProjects =>
+        prevProjects.map(p =>
+          p.id === editingProject.id ? { ...p, ...projectData } : p
+        )
+      );
+      message.success('แก้ไขโครงการสำเร็จ');
+    } else {
+      // Create new project
+      setProjects(prevProjects => [
+        ...prevProjects,
+        { id: Date.now(), ...projectData }
+      ]);
+      message.success('เพิ่มโครงการสำเร็จ');
+    }
+    setView('list');
+    setEditingProject(null);
   };
 
   if (view === 'form') {
-    return <ProjectForm onBack={handleBack} onSave={handleSaveProject} />;
+    return <ProjectForm
+      onBack={handleBack}
+      onSave={handleSaveProject}
+      editingProject={editingProject}
+    />;
   }
 
   const columns = [
@@ -58,6 +92,34 @@ const ProjectManagement = () => {
         <Tag color={status === 'active' ? 'green' : 'red'}>
           {status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน'}
         </Tag>
+      )
+    },
+    {
+      title: 'การดำเนินการ',
+      key: 'actions',
+      width: 120,
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="primary"
+            icon={<EditOutlined />}
+            size="small"
+            onClick={() => handleEdit(record)}
+          />
+          <Popconfirm
+            title="ยืนยันการลบ"
+            description="คุณแน่ใจหรือไม่ที่จะลบโครงการนี้?"
+            onConfirm={() => handleDelete(record.id)}
+            okText="ใช่"
+            cancelText="ไม่"
+          >
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              size="small"
+            />
+          </Popconfirm>
+        </Space>
       )
     },
   ];

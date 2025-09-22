@@ -66,7 +66,6 @@ const Dashboard = () => {
     try {
       setStatsLoading(true);
       const response = await dashboardAPI.getStats();
-      console.log('Dashboard API response:', response);
 
       // API returns nested structure: data.agents.total, data.customers.total
       if (response.data) {
@@ -90,7 +89,6 @@ const Dashboard = () => {
     try {
       setActivitiesLoading(true);
       const response = await dashboardAPI.getRecentActivities();
-      console.log('Recent activities response:', response);
 
       if (response.data) {
         setRecentActivities(response.data);

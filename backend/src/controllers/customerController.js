@@ -49,10 +49,14 @@ export const getCustomers = async (req, res) => {
 
     const customers = rows.map(customer => {
       const plainCustomer = customer.get({ plain: true });
+
+
       return {
         ...plainCustomer,
         projectName: plainCustomer.project?.projectName,
         budget: (parseFloat(plainCustomer.budgetMin) + parseFloat(plainCustomer.budgetMax)) / 2,
+        createdAt: plainCustomer.createdAt || plainCustomer.created_at,
+        updatedAt: plainCustomer.updatedAt || plainCustomer.updated_at,
       };
     });
 

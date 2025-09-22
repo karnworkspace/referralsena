@@ -76,7 +76,23 @@ docker-compose up -d --build
 2. **สร้าง commit ก่อน context เต็ม**
 3. **สำรองไฟล์สำคัญใน docs/**
 
+### 5. Customer Management Data Display Fixes ✅
+- **ปัญหา**: ข้อมูล เอเจนต์, โครงการ, งบประมาณ, ที่อยู่, วันที่ลงทะเบียน ไม่แสดงในตาราง
+- **สาเหตุ**: server-mysql.js ไม่ได้ใส่ `as: 'agent'` และ `as: 'project'` ใน include associations
+- **การแก้ไข**:
+  1. เพิ่ม `as: 'agent'` ใน Agent model includes ทุกที่ใน server-mysql.js
+  2. เพิ่ม `as: 'project'` ใน Project model includes ทุกที่ใน server-mysql.js
+  3. ใช้ `created_at` field แทน `registrationDate` สำหรับวันที่ลงทะเบียน
+  4. ปรับปรุง budget display เป็น 3 บรรทัด (min / - / max)
+  5. เพิ่ม null checks ในทุก column rendering
+- **ผลลัพธ์**: ข้อมูล agent แสดงเป็น "AG007 - นายอดินันท์" ในคอลัมน์เอเจนต์แล้ว
+
 ### Recent Technical Fixes
+- **Sequelize Associations**: เพิ่ม `as: 'agent'` และ `as: 'project'` ใน findAndCountAll และ findByPk
+- **Budget Display**: ปรับเป็น 3-line format (min / dash / max) พร้อม Thai number formatting
+- **Agent Column**: แสดง agentCode + firstName ในรูปแบบ "AG007 - นายอดินันท์"
+- **Database Fixes**: เพิ่ม columns registration_date และ address ใน customers table
+- **Date Handling**: ใช้ created_at แทน registrationDate สำหรับการแสดงวันที่
 - Agent detail click: ใช้ onMouseDown + setTimeout แทน onClick
 - Date validation: ใช้ conditional rules based on editingCustomer
 - Chart positioning: ย้ายไปบน statistics cards
@@ -88,14 +104,20 @@ docker-compose up -d --build
 - User permission system
 - Notification system
 - Mobile responsiveness
+- ลบ debug console.log ออกจาก customer management
+- เพิ่ม project name display ในคอลัมน์โครงการ
 
 ## 📝 Important Notes
 - **การสนทนา: ใช้ภาษาไทยเป็นหลัก** - User ต้องการสนทนาเป็นภาษาไทยเสมอ
+- **Docker Required**: ใช้ Docker containers เสมอ (ห้าม npm run local)
+- **Login Credentials**: admin@test.com / password
+- **API Testing**: curl with Bearer token for debugging
 - URL อยู่ที่ `/admin/dashboard` เสมอ (SPA routing)
 - Agent approval ใช้ status: inactive → active
 - Customer statuses: active, inactive, pending เท่านั้น
 - Charts ใช้ Recharts library กับ Ant Design
 - Modal detail ใช้ Typography.Text component
+- Sequelize associations ต้องมี `as` property เสมอ
 
 ---
-*อัพเดตล่าสุด: หลังแก้ Customer form validation bug*
+*อัพเดตล่าสุด: แก้ไข Agent data display ใน Customer Management สำเร็จ*

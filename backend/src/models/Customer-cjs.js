@@ -65,8 +65,8 @@ const Customer = sequelize.define('Customer', {
     field: 'budget_max'
   },
   status: {
-    type: DataTypes.ENUM('new', 'contacted', 'interested', 'visit_scheduled', 'visited', 'negotiating', 'closed_won', 'closed_lost'),
-    defaultValue: 'new'
+    type: DataTypes.ENUM('active', 'inactive', 'pending'),
+    defaultValue: 'pending'
   },
   source: {
     type: DataTypes.ENUM('referral', 'walk_in', 'online', 'phone', 'other'),
@@ -126,6 +126,15 @@ const Customer = sequelize.define('Customer', {
       model: 'users',
       key: 'id'
     }
+  },
+  registrationDate: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+    field: 'registration_date'
+  },
+  address: {
+    type: DataTypes.TEXT,
+    allowNull: true
   }
 }, {
   tableName: 'customers',
@@ -142,6 +151,19 @@ Customer.prototype.getFullName = function() {
 Customer.prototype.toJSON = function() {
   const values = Object.assign({}, this.get());
   return values;
+};
+
+// Define associations
+Customer.associate = function(models) {
+  Customer.belongsTo(models.Agent, {
+    foreignKey: 'agentId',
+    as: 'agent'
+  });
+
+  Customer.belongsTo(models.Project, {
+    foreignKey: 'projectId',
+    as: 'project'
+  });
 };
 
 module.exports = Customer;

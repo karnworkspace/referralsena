@@ -56,11 +56,6 @@ const AgentManagementNew = () => {
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState(null);
 
-  // Debug modal state changes
-  useEffect(() => {
-    console.log('Modal visibility changed:', isDetailModalVisible);
-    console.log('Selected agent:', selectedAgent);
-  }, [isDetailModalVisible, selectedAgent]);
 
   useEffect(() => {
     dispatch(fetchAgents({
@@ -200,17 +195,11 @@ const AgentManagementNew = () => {
 
       // Ensure we have valid agent data
       if (!agent) {
-        console.error('No agent data provided');
         return;
       }
 
-      console.log('Setting selected agent:', agent);
       setSelectedAgent(agent);
-
-      console.log('Setting modal visible to true');
       setIsDetailModalVisible(true);
-
-      console.log('Modal should be opening now');
     } catch (error) {
       console.error('Error in handleShowDetail:', error);
     }
@@ -245,8 +234,13 @@ const AgentManagementNew = () => {
           style={{
             cursor: 'pointer',
             fontWeight: 'bold',
-            color: '#1890ff',
-            textDecoration: 'underline'
+            color: '#389e0d',
+            background: '#f6ffed',
+            border: '1px solid #b7eb8f',
+            borderRadius: '6px',
+            padding: '4px 8px',
+            display: 'inline-block',
+            fontSize: '13px'
           }}
           onMouseDown={(e) => {
             e.preventDefault();
@@ -366,14 +360,10 @@ const AgentManagementNew = () => {
           <div style={{ display: 'flex', gap: '4px', marginLeft: 'auto' }}>
             <Tooltip title="แก้ไข">
               <Button
-                type="link"
+                type="text"
                 icon={<EditOutlined />}
                 onClick={() => handleEdit(record)}
-                size="small"
-                style={{ padding: '4px 8px' }}
-              >
-                แก้ไข
-              </Button>
+              />
             </Tooltip>
 
             <Popconfirm
@@ -384,14 +374,10 @@ const AgentManagementNew = () => {
               cancelText="ไม่"
             >
               <Button
-                type="link"
+                type="text"
                 danger
                 icon={<DeleteOutlined />}
-                size="small"
-                style={{ padding: '4px 8px' }}
-              >
-                ลบ
-              </Button>
+              />
             </Popconfirm>
           </div>
         </div>

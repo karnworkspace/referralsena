@@ -69,18 +69,18 @@ const CustomerManagement = () => {
     filters
   } = useSelector((state) => state.customers);
 
-  console.log('=== CustomerManagement render ===', {
-    customers,
-    loading,
-    error,
-    customersLength: customers?.length
-  });
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [viewingCustomer, setViewingCustomer] = useState(null);
   const [form] = Form.useForm();
+
+  // State for projects list
+  const [projectsList, setProjectsList] = useState([
+    { id: 1, projectName: 'Sena Village Tiwanon', status: 'active' },
+    { id: 2, projectName: 'Sena Park Grand Ramindra', status: 'active' }
+  ]);
 
   // Load customers and agents on component mount
   useEffect(() => {
@@ -150,7 +150,7 @@ const CustomerManagement = () => {
       dataIndex: 'phone',
       key: 'phone',
       width: 130,
-      render: (text) => text ? (
+      render: (text) => (text && text.trim() !== '') ? (
         <Space>
           <PhoneOutlined />
           <span>{text}</span>
@@ -159,39 +159,88 @@ const CustomerManagement = () => {
     },
     {
       title: 'ชื่อโครงการ',
-      dataIndex: 'projectName',
       key: 'projectName',
       width: 150,
-      render: (text) => text || '-'
+      render: (_, record) => {
+        // Check if project data exists and has projectName
+        if (record.project && record.project.projectName) {
+          return record.project.projectName;
+        }
+        // Check if projectId exists and find project name from projectsList
+        if (record.projectId) {
+          const project = projectsList.find(p => p.id === record.projectId);
+          return project ? project.projectName : `Project ID: ${record.projectId}`;
+        }
+        // Fallback to direct projectName field
+        if (record.projectName) {
+          return record.projectName;
+        }
+        return '-';
+      }
     },
     {
       title: 'งบประมาณ',
-      dataIndex: 'budget',
       key: 'budget',
-      width: 120,
-      render: (text) => text ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(text) : '-'
+      width: 160,
+      render: (_, record) => {
+        // Check for budgetMin and budgetMax first
+        if (record.budgetMin && record.budgetMax) {
+          const min = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(record.budgetMin);
+          const max = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(record.budgetMax);
+          return (
+            <div style={{ fontSize: '12px', lineHeight: '1.1' }}>
+              <div>฿{min}</div>
+              <div style={{ color: '#999', textAlign: 'center', fontSize: '10px' }}>-</div>
+              <div>฿{max}</div>
+            </div>
+          );
+        }
+        // Fallback to single budget field
+        if (record.budget && record.budget > 0) {
+          const formatted = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(record.budget);
+          return <span style={{ fontSize: '12px' }}>฿{formatted}</span>;
+        }
+        return '-';
+      }
     },
     {
       title: 'เอเจนต์',
       key: 'agent',
       width: 150,
-      render: (_, record) => record.agent ? (
-        <Space>
-          <TeamOutlined />
-          <span>{`${record.agent.agentCode} - ${record.agent.firstName}`}</span>
-        </Space>
-      ) : '-'
+      render: (_, record) => {
+
+        if (record.agent && record.agent.agentCode && record.agent.firstName) {
+          return (
+            <Space>
+              <TeamOutlined />
+              <span>{`${record.agent.agentCode} - ${record.agent.firstName}`}</span>
+            </Space>
+          );
+        }
+
+        // If no agent object but has agentId, show agentId
+        if (record.agentId) {
+          return (
+            <Space>
+              <TeamOutlined />
+              <span>Agent ID: {record.agentId}</span>
+            </Space>
+          );
+        }
+
+        return '-';
+      }
     },
     {
       title: 'ที่อยู่',
       dataIndex: 'address',
       key: 'address',
-      width: 200,
-      render: (text) => text ? (
+      width: 150,
+      render: (text) => (text && text.trim() !== '') ? (
         <Tooltip title={text}>
-          <div style={{ 
-            maxWidth: '180px', 
-            overflow: 'hidden', 
+          <div style={{
+            maxWidth: '130px',
+            overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap'
           }}>
@@ -202,18 +251,27 @@ const CustomerManagement = () => {
       ) : '-'
     },
     {
+      title: 'วันที่ลงทะเบียน',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      width: 130,
+      render: (date, record) => {
+        // Try different field names
+        const dateValue = date || record.createdAt || record.created_at;
+        if (!dateValue) return '-';
+        try {
+          return new Date(dateValue).toLocaleDateString('th-TH');
+        } catch (error) {
+          return '-';
+        }
+      }
+    },
+    {
       title: 'สถานะ',
       dataIndex: 'status',
       key: 'status',
       width: 100,
       render: (status) => getStatusTag(status)
-    },
-    {
-      title: 'วันที่ลงทะเบียน',
-      dataIndex: 'registrationDate',
-      key: 'registrationDate',
-      width: 130,
-      render: (date) => new Date(date).toLocaleDateString('th-TH')
     },
     {
       title: 'การจัดการ',
@@ -307,7 +365,7 @@ const CustomerManagement = () => {
       lastName: customer.lastName,
       email: customer.email,
       phone: customer.phone,
-      projectName: customer.projectName,
+      projectId: customer.projectId,
       budgetRange: budgetRange,
       idCard: customer.idCard,
       address: customer.address,
@@ -455,7 +513,7 @@ const CustomerManagement = () => {
           dataSource={customers}
           rowKey="id"
           loading={loading}
-          scroll={{ x: 1400 }}
+          scroll={{ x: 1600 }}
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,
@@ -563,10 +621,27 @@ const CustomerManagement = () => {
             </Col>
             <Col xs={24} sm={12}>
               <Form.Item
-                name="projectName"
+                name="projectId"
                 label="ชื่อโครงการ"
               >
-                <Input placeholder="ชื่อโครงการ" />
+                <Select
+                  placeholder="เลือกโครงการ"
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                  allowClear
+                >
+                  {projectsList
+                    .filter(project => project.status === 'active')
+                    .map(project => (
+                      <Option key={project.id} value={project.id}>
+                        {project.projectName}
+                      </Option>
+                    ))
+                  }
+                </Select>
               </Form.Item>
             </Col>
           </Row>
@@ -584,18 +659,6 @@ const CustomerManagement = () => {
                   <Option value="4000000-5000000">4-5 ล้านบาท</Option>
                   <Option value="5000000-">มากกว่า 5 ล้านบาท</Option>
                 </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="registrationDate"
-                label="วันที่ลงทะเบียน"
-                rules={editingCustomer ? [] : [{ required: true, message: 'กรุณาใส่วันที่ลงทะเบียน' }]}
-              >
-                <Input
-                  type="date"
-                  disabled={!!editingCustomer}
-                />
               </Form.Item>
             </Col>
           </Row>
@@ -683,9 +746,26 @@ const CustomerManagement = () => {
             <Descriptions.Item label="นามสกุล">{viewingCustomer.lastName}</Descriptions.Item>
             <Descriptions.Item label="อีเมล" span={2}>{viewingCustomer.email}</Descriptions.Item>
             <Descriptions.Item label="เบอร์โทร">{viewingCustomer.phone}</Descriptions.Item>
-            <Descriptions.Item label="ชื่อโครงการ">{viewingCustomer.projectName || '-'}</Descriptions.Item>
+            <Descriptions.Item label="ชื่อโครงการ">
+              {(() => {
+                if (viewingCustomer.project && viewingCustomer.project.projectName) {
+                  return viewingCustomer.project.projectName;
+                }
+                if (viewingCustomer.projectId) {
+                  const project = projectsList.find(p => p.id === viewingCustomer.projectId);
+                  return project ? project.projectName : `Project ID: ${viewingCustomer.projectId}`;
+                }
+                if (viewingCustomer.projectName) {
+                  return viewingCustomer.projectName;
+                }
+                return '-';
+              })()}
+            </Descriptions.Item>
             <Descriptions.Item label="งบประมาณ">{viewingCustomer.budget ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(viewingCustomer.budget) : '-'}</Descriptions.Item>
-            <Descriptions.Item label="วันที่ลงทะเบียน">{new Date(viewingCustomer.registrationDate).toLocaleDateString('th-TH')}</Descriptions.Item>
+            <Descriptions.Item label="วันที่ลงทะเบียน">
+              {(viewingCustomer.createdAt || viewingCustomer.created_at) ?
+                new Date(viewingCustomer.createdAt || viewingCustomer.created_at).toLocaleDateString('th-TH') : '-'}
+            </Descriptions.Item>
             <Descriptions.Item label="เลขประจำตัวประชาชน" span={2}>{viewingCustomer.idCard}</Descriptions.Item>
             <Descriptions.Item label="เอเจนต์ที่รับผิดชอบ" span={2}>
               {viewingCustomer.agent ? `${viewingCustomer.agent.agentCode} - ${viewingCustomer.agent.firstName}` : '-'}

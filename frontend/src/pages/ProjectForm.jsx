@@ -15,12 +15,11 @@ const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
-const ProjectForm = ({ onBack, onSave }) => {
+const ProjectForm = ({ onBack, onSave, editingProject }) => {
   const [form] = Form.useForm();
 
   const onFinish = (values) => {
-    onSave(values); // Pass data to parent
-    onBack(); // Go back to the list view
+    onSave(values); // Pass data to parent - let parent handle navigation
   };
 
   return (
@@ -31,12 +30,14 @@ const ProjectForm = ({ onBack, onSave }) => {
         </Button>
       </div>
       <Card>
-        <Title level={4}>สร้างโครงการใหม่</Title>
+        <Title level={4}>
+          {editingProject ? 'แก้ไขโครงการ' : 'สร้างโครงการใหม่'}
+        </Title>
         <Form
           form={form}
           layout="vertical"
           onFinish={onFinish}
-          initialValues={{
+          initialValues={editingProject || {
             status: 'active', // Default status to active
           }}
         >
@@ -72,7 +73,7 @@ const ProjectForm = ({ onBack, onSave }) => {
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">
-              บันทึกโครงการ
+              {editingProject ? 'อัพเดตโครงการ' : 'บันทึกโครงการ'}
             </Button>
           </Form.Item>
         </Form>

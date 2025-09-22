@@ -17,6 +17,37 @@ const Agent = require('./src/models/Agent-cjs');
 const Customer = require('./src/models/Customer-cjs');
 const Project = require('./src/models/Project-cjs');
 
+// Define associations
+// User - Agent (One to One)
+User.hasOne(Agent, {
+  foreignKey: 'userId',
+  as: 'agent'
+});
+Agent.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'user'
+});
+
+// Agent - Customer (One to Many)
+Agent.hasMany(Customer, {
+  foreignKey: 'agentId',
+  as: 'customers'
+});
+Customer.belongsTo(Agent, {
+  foreignKey: 'agentId',
+  as: 'agent'
+});
+
+// Project - Customer (One to Many)
+Project.hasMany(Customer, {
+  foreignKey: 'projectId',
+  as: 'customers'
+});
+Customer.belongsTo(Project, {
+  foreignKey: 'projectId',
+  as: 'project'
+});
+
 const app = express();
 
 // Security middleware
@@ -844,11 +875,13 @@ app.get('/api/customers', checkAuth, async (req, res) => {
       include: [
         {
           model: Agent,
+          as: 'agent',
           attributes: ['id', 'agentCode', 'firstName', 'lastName'],
           required: false
         },
         {
           model: Project,
+          as: 'project',
           attributes: ['id', 'projectName'],
           required: false
         }
@@ -967,11 +1000,13 @@ app.post('/api/customers', checkAuth, async (req, res) => {
       include: [
         {
           model: Agent,
+          as: 'agent',
           attributes: ['id', 'agentCode', 'firstName', 'lastName'],
           required: false
         },
         {
           model: Project,
+          as: 'project',
           attributes: ['id', 'projectName'],
           required: false
         }
@@ -1002,11 +1037,13 @@ app.get('/api/customers/:id', checkAuth, async (req, res) => {
       include: [
         {
           model: Agent,
+          as: 'agent',
           attributes: ['id', 'agentCode', 'firstName', 'lastName'],
           required: false
         },
         {
           model: Project,
+          as: 'project',
           attributes: ['id', 'projectName'],
           required: false
         }
@@ -1129,11 +1166,13 @@ app.put('/api/customers/:id', checkAuth, async (req, res) => {
       include: [
         {
           model: Agent,
+          as: 'agent',
           attributes: ['id', 'agentCode', 'firstName', 'lastName'],
           required: false
         },
         {
           model: Project,
+          as: 'project',
           attributes: ['id', 'projectName'],
           required: false
         }
