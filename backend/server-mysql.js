@@ -1225,6 +1225,168 @@ app.delete('/api/customers/:id', checkAuth, async (req, res) => {
   }
 });
 
+// =================================
+// PROJECTS ENDPOINTS
+// =================================
+
+// GET /api/projects - Get all projects
+app.get('/api/projects', checkAuth, async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search, status } = req.query;
+    const offset = (page - 1) * limit;
+
+    let whereClause = {};
+
+    if (status && status !== 'all') {
+      whereClause.isActive = status === 'active' ? 1 : 0;
+    }
+
+    if (search) {
+      whereClause[Op.or] = [
+        { projectName: { [Op.like]: `%${search}%` } },
+        { location: { [Op.like]: `%${search}%` } },
+      ];
+    }
+
+    const { count, rows } = await Project.findAndCountAll({
+      where: whereClause,
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['created_at', 'DESC']],
+    });
+
+    const totalPages = Math.ceil(count / limit);
+
+    res.json({
+      success: true,
+      message: 'Projects fetched successfully',
+      data: rows,
+      pagination: {
+        total: count,
+        current: parseInt(page),
+        pageSize: parseInt(limit),
+        totalPages: totalPages,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching projects:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch projects',
+      error: error.message,
+    });
+  }
+});
+
+// POST /api/projects - Create a new project
+app.post('/api/projects', checkAuth, async (req, res) => {
+  try {
+    const project = await Project.create(req.body);
+    res.status(201).json({
+      success: true,
+      message: 'Project created successfully',
+      data: project,
+    });
+  } catch (error) {
+    console.error('Error creating project:', error);
+    res.status(400).json({
+      success: false,
+      message: 'Failed to create project',
+      error: error.message,
+    });
+  }
+});
+
+// GET /api/projects/:id - Get project by ID
+app.get('/api/projects/:id', checkAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const project = await Project.findByPk(id);
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Project fetched successfully',
+      data: project,
+    });
+  } catch (error) {
+    console.error('Error fetching project:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch project',
+      error: error.message,
+    });
+  }
+});
+
+// PUT /api/projects/:id - Update project
+app.put('/api/projects/:id', checkAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [updated] = await Project.update(req.body, {
+      where: { id: id },
+    });
+
+    if (updated) {
+      const updatedProject = await Project.findByPk(id);
+      res.json({
+        success: true,
+        message: 'Project updated successfully',
+        data: updatedProject,
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: 'Project not found',
+      });
+    }
+  } catch (error) {
+    console.error('Error updating project:', error);
+    res.status(400).json({
+      success: false,
+      message: 'Failed to update project',
+      error: error.message,
+    });
+  }
+});
+
+// DELETE /api/projects/:id - Delete project
+app.delete('/api/projects/:id', checkAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const project = await Project.findByPk(id);
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found'
+      });
+    }
+
+    // Delete project
+    await project.destroy();
+
+    res.json({
+      success: true,
+      message: 'Project deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete project error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete project'
+    });
+  }
+});
+
 // GET /api/dashboard/stats - Get dashboard statistics
 app.get('/api/dashboard/stats', checkAuth, async (req, res) => {
   try {

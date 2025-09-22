@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Button,
@@ -12,6 +12,7 @@ import {
   message
 } from 'antd';
 import { PlusOutlined, ProjectOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { projectsAPI } from '../services/api';
 import ProjectForm from './ProjectForm';
 
 const { Title } = Typography;
@@ -19,10 +20,26 @@ const { Title } = Typography;
 const ProjectManagement = () => {
   const [view, setView] = useState('list'); // 'list' or 'form'
   const [editingProject, setEditingProject] = useState(null);
-  const [projects, setProjects] = useState([
-    { id: 1, projectName: 'Sena Village Tiwanon', location: 'Tiwanon Road, Nonthaburi', status: 'active' },
-    { id: 2, projectName: 'Sena Park Grand Ramindra', location: 'Ramindra Road, Bangkok', status: 'inactive' }
-  ]);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Load projects from API
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const response = await projectsAPI.getAll();
+      setProjects(response.data || []);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      message.error('ไม่สามารถโหลดข้อมูลโครงการได้');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreate = () => {
     setEditingProject(null);
@@ -34,9 +51,15 @@ const ProjectManagement = () => {
     setView('form');
   };
 
-  const handleDelete = (projectId) => {
-    setProjects(prevProjects => prevProjects.filter(p => p.id !== projectId));
-    message.success('ลบโครงการสำเร็จ');
+  const handleDelete = async (projectId) => {
+    try {
+      await projectsAPI.delete(projectId);
+      message.success('ลบโครงการสำเร็จ');
+      fetchProjects(); // Reload projects
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      message.error('ไม่สามารถลบโครงการได้');
+    }
   };
 
   const handleBack = () => {
@@ -44,25 +67,24 @@ const ProjectManagement = () => {
     setEditingProject(null);
   };
 
-  const handleSaveProject = (projectData) => {
-    if (editingProject) {
-      // Update existing project
-      setProjects(prevProjects =>
-        prevProjects.map(p =>
-          p.id === editingProject.id ? { ...p, ...projectData } : p
-        )
-      );
-      message.success('แก้ไขโครงการสำเร็จ');
-    } else {
-      // Create new project
-      setProjects(prevProjects => [
-        ...prevProjects,
-        { id: Date.now(), ...projectData }
-      ]);
-      message.success('เพิ่มโครงการสำเร็จ');
+  const handleSaveProject = async (projectData) => {
+    try {
+      if (editingProject) {
+        // Update existing project
+        await projectsAPI.update(editingProject.id, projectData);
+        message.success('แก้ไขโครงการสำเร็จ');
+      } else {
+        // Create new project
+        await projectsAPI.create(projectData);
+        message.success('เพิ่มโครงการสำเร็จ');
+      }
+      setView('list');
+      setEditingProject(null);
+      fetchProjects(); // Reload projects
+    } catch (error) {
+      console.error('Error saving project:', error);
+      message.error(editingProject ? 'ไม่สามารถแก้ไขโครงการได้' : 'ไม่สามารถเพิ่มโครงการได้');
     }
-    setView('list');
-    setEditingProject(null);
   };
 
   if (view === 'form') {
@@ -85,12 +107,38 @@ const ProjectManagement = () => {
       key: 'location',
     },
     {
+      title: 'ราคา (บาท)',
+      key: 'priceRange',
+      width: 180,
+      render: (_, record) => {
+        if (record.priceRangeMin && record.priceRangeMax) {
+          const min = new Intl.NumberFormat('th-TH').format(record.priceRangeMin);
+          const max = new Intl.NumberFormat('th-TH').format(record.priceRangeMax);
+          return (
+            <div style={{ fontSize: '12px', lineHeight: '1.2' }}>
+              <div>฿{min}</div>
+              <div style={{ color: '#999', textAlign: 'center', fontSize: '10px' }}>-</div>
+              <div>฿{max}</div>
+            </div>
+          );
+        }
+        return '-';
+      }
+    },
+    {
+      title: 'ทีมขาย',
+      dataIndex: 'salesTeam',
+      key: 'salesTeam',
+      width: 100,
+      render: (text) => text || '-'
+    },
+    {
       title: 'สถานะ',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => (
-        <Tag color={status === 'active' ? 'green' : 'red'}>
-          {status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน'}
+      render: (_, record) => (
+        <Tag color={record.isActive ? 'green' : 'red'}>
+          {record.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน'}
         </Tag>
       )
     },
@@ -151,6 +199,8 @@ const ProjectManagement = () => {
           columns={columns}
           dataSource={projects}
           rowKey="id"
+          loading={loading}
+          scroll={{ x: 1200 }}
         />
       </Card>
     </div>

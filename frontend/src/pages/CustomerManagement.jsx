@@ -41,6 +41,7 @@ import {
   setPagination,
   clearError
 } from '../store/customersSlice';
+import { projectsAPI } from '../services/api';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -77,12 +78,10 @@ const CustomerManagement = () => {
   const [form] = Form.useForm();
 
   // State for projects list
-  const [projectsList, setProjectsList] = useState([
-    { id: 1, projectName: 'Sena Village Tiwanon', status: 'active' },
-    { id: 2, projectName: 'Sena Park Grand Ramindra', status: 'active' }
-  ]);
+  const [projectsList, setProjectsList] = useState([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
 
-  // Load customers and agents on component mount
+  // Load customers, agents and projects on component mount
   useEffect(() => {
     dispatch(fetchCustomers({
       page: pagination.current,
@@ -90,7 +89,21 @@ const CustomerManagement = () => {
       ...filters
     }));
     dispatch(fetchAgentsList());
+    fetchProjects();
   }, [dispatch, pagination.current, pagination.pageSize, filters]);
+
+  // Fetch projects from API
+  const fetchProjects = async () => {
+    try {
+      setProjectsLoading(true);
+      const response = await projectsAPI.getAll();
+      setProjectsList(response.data || []);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    } finally {
+      setProjectsLoading(false);
+    }
+  };
 
   // Handle error notifications
   useEffect(() => {
@@ -632,9 +645,10 @@ const CustomerManagement = () => {
                     (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
                   }
                   allowClear
+                  loading={projectsLoading}
                 >
                   {projectsList
-                    .filter(project => project.status === 'active')
+                    .filter(project => project.isActive === true)
                     .map(project => (
                       <Option key={project.id} value={project.id}>
                         {project.projectName}
