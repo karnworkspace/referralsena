@@ -532,6 +532,42 @@ app.get('/api/agents/list', checkAuth, async (req, res) => {
   }
 });
 
+// GET /api/agents/next-code - Get next available agent code (public endpoint for registration)
+app.get('/api/agents/next-code', async (req, res) => {
+  try {
+    // Get the latest agent code
+    const latestAgent = await Agent.findOne({
+      order: [['agentCode', 'DESC']],
+      attributes: ['agentCode']
+    });
+
+    let nextCode = 'AG001'; // Default first code
+
+    if (latestAgent && latestAgent.agentCode) {
+      // Extract number from agent code (e.g., AG007 -> 7)
+      const currentNumber = parseInt(latestAgent.agentCode.replace('AG', ''), 10);
+      const nextNumber = currentNumber + 1;
+
+      // Format next code with leading zeros (e.g., 8 -> AG008)
+      nextCode = `AG${nextNumber.toString().padStart(3, '0')}`;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        nextAgentCode: nextCode
+      }
+    });
+  } catch (error) {
+    console.error('Error getting next agent code:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get next agent code',
+      error: error.message
+    });
+  }
+});
+
 // GET /api/agents/:id - Get agent by ID
 app.get('/api/agents/:id', checkAuth, async (req, res) => {
   try {
@@ -1024,6 +1060,42 @@ app.post('/api/customers', checkAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดในการสร้างลูกค้าใหม่'
+    });
+  }
+});
+
+// GET /api/customers/next-code - Get next available customer code (public endpoint for customer management)
+app.get('/api/customers/next-code', async (req, res) => {
+  try {
+    // Get the latest customer code
+    const latestCustomer = await Customer.findOne({
+      order: [['customerCode', 'DESC']],
+      attributes: ['customerCode']
+    });
+
+    let nextCode = 'CU001'; // Default first code
+
+    if (latestCustomer && latestCustomer.customerCode) {
+      // Extract number from customer code (e.g., CU007 -> 7)
+      const currentNumber = parseInt(latestCustomer.customerCode.replace('CU', ''), 10);
+      const nextNumber = currentNumber + 1;
+
+      // Format next code with leading zeros (e.g., 8 -> CU008)
+      nextCode = `CU${nextNumber.toString().padStart(3, '0')}`;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        nextCustomerCode: nextCode
+      }
+    });
+  } catch (error) {
+    console.error('Error getting next customer code:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get next customer code',
+      error: error.message
     });
   }
 });

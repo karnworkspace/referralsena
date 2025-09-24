@@ -28,6 +28,7 @@ import {
   PhoneOutlined,
   UserOutlined,
   IdcardOutlined,
+  ReloadOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   CheckOutlined,
@@ -40,6 +41,7 @@ import {
   deleteAgent,
   setFilters
 } from '../store/agentsSlice';
+import { agentsAPI } from '../services/api';
 
 const { Title } = Typography;
 
@@ -55,6 +57,10 @@ const AgentManagementNew = () => {
   // States for agent detail modal
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState(null);
+
+  // States for auto-increment agent code
+  const [nextAgentCode, setNextAgentCode] = useState('');
+  const [loadingAgentCode, setLoadingAgentCode] = useState(false);
 
 
   useEffect(() => {
@@ -74,10 +80,28 @@ const AgentManagementNew = () => {
     dispatch(setFilters({ status }));
   };
 
+  const fetchNextAgentCode = async () => {
+    try {
+      setLoadingAgentCode(true);
+      const response = await agentsAPI.getNextCode();
+      setNextAgentCode(response.data.nextAgentCode);
+      form.setFieldValue('agentCode', response.data.nextAgentCode);
+    } catch (error) {
+      console.error('Error fetching next agent code:', error);
+      // Fallback to default if API fails
+      setNextAgentCode('AG001');
+      form.setFieldValue('agentCode', 'AG001');
+    } finally {
+      setLoadingAgentCode(false);
+    }
+  };
+
   const handleAdd = () => {
     setEditingAgent(null);
     setIsModalVisible(true);
     form.resetFields();
+    // Fetch next agent code for new agent
+    fetchNextAgentCode();
   };
 
   const handleEdit = (agent) => {
@@ -485,12 +509,42 @@ const AgentManagementNew = () => {
         >
           <Form.Item
             name="agentCode"
-            label="รหัสเอเจนต์"
+            label={
+              !editingAgent ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  รหัสเอเจนต์
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<ReloadOutlined />}
+                    onClick={fetchNextAgentCode}
+                    loading={loadingAgentCode}
+                    title="สร้างรหัสใหม่"
+                    style={{ padding: '0 4px', height: '20px', minWidth: '20px' }}
+                  />
+                </div>
+              ) : 'รหัสเอเจนต์'
+            }
             rules={[
+              { required: true, message: 'รหัสเอเจนต์จำเป็น' },
               { pattern: /^AG\d{3}$/, message: 'รหัสเอเจนต์ต้องเป็นรูปแบบ AG001' }
             ]}
           >
-            <Input placeholder="AG001" />
+            <Input
+              placeholder={loadingAgentCode ? "กำลังโหลด..." : nextAgentCode}
+              disabled={!editingAgent}
+              style={!editingAgent ? {
+                backgroundColor: '#f0f8ff',
+                border: '1px solid #1890ff',
+                color: '#1890ff',
+                fontWeight: 'bold'
+              } : {}}
+            />
+            {!editingAgent && (
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
+                💡 รหัสเอเจนต์ถูกสร้างโดยอัตโนมัติจากข้อมูลล่าสุดในระบบ
+              </div>
+            )}
           </Form.Item>
 
           <Row gutter={16}>

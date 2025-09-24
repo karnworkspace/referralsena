@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Card, 
@@ -23,9 +23,10 @@ import {
   LockOutlined,
   CheckCircleOutlined,
   TeamOutlined,
-  ExclamationCircleOutlined
+  ExclamationCircleOutlined,
+  ReloadOutlined
 } from '@ant-design/icons';
-import { authAPI } from '../services/api';
+import { authAPI, agentsAPI } from '../services/api';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -37,6 +38,43 @@ const AgentRegister = () => {
   const [agentInfo, setAgentInfo] = useState(null);
   const [errorModalVisible, setErrorModalVisible] = useState(false);
   const [errorDetails, setErrorDetails] = useState(null);
+  const [nextAgentCode, setNextAgentCode] = useState('');
+  const [loadingAgentCode, setLoadingAgentCode] = useState(true);
+
+  // Load next agent code when component mounts
+  useEffect(() => {
+    const fetchNextAgentCode = async () => {
+      try {
+        setLoadingAgentCode(true);
+        const response = await agentsAPI.getNextCode();
+        setNextAgentCode(response.data.nextAgentCode);
+        // Set the agent code in the form
+        form.setFieldValue('agentCode', response.data.nextAgentCode);
+      } catch (error) {
+        console.error('Error fetching next agent code:', error);
+        // Fallback to default if API fails
+        setNextAgentCode('AG001');
+        form.setFieldValue('agentCode', 'AG001');
+      } finally {
+        setLoadingAgentCode(false);
+      }
+    };
+
+    fetchNextAgentCode();
+  }, [form]);
+
+  const handleRefreshAgentCode = async () => {
+    try {
+      setLoadingAgentCode(true);
+      const response = await agentsAPI.getNextCode();
+      setNextAgentCode(response.data.nextAgentCode);
+      form.setFieldValue('agentCode', response.data.nextAgentCode);
+    } catch (error) {
+      console.error('Error refreshing agent code:', error);
+    } finally {
+      setLoadingAgentCode(false);
+    }
+  };
 
   const handleSubmit = async (values) => {
     setLoading(true);
@@ -245,6 +283,42 @@ const AgentRegister = () => {
           onFinish={handleSubmit}
           size="large"
         >
+          <Form.Item
+            name="agentCode"
+            label={
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                รหัสเอเจนต์
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<ReloadOutlined />}
+                  onClick={handleRefreshAgentCode}
+                  loading={loadingAgentCode}
+                  title="สร้างรหัสใหม่"
+                  style={{ padding: '0 4px', height: '20px', minWidth: '20px' }}
+                />
+              </div>
+            }
+            rules={[
+              { required: true, message: 'รหัสเอเจนต์จำเป็น' }
+            ]}
+          >
+            <Input
+              prefix={<IdcardOutlined />}
+              placeholder={loadingAgentCode ? "กำลังโหลด..." : nextAgentCode}
+              disabled={true}
+              style={{
+                backgroundColor: '#f0f8ff',
+                border: '1px solid #1890ff',
+                color: '#1890ff',
+                fontWeight: 'bold'
+              }}
+            />
+            <Text type="secondary" style={{ fontSize: '12px', marginTop: '4px', display: 'block' }}>
+              💡 รหัสเอเจนต์ถูกสร้างโดยอัตโนมัติจากข้อมูลล่าสุดในระบบ
+            </Text>
+          </Form.Item>
+
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item
@@ -255,9 +329,9 @@ const AgentRegister = () => {
                   { min: 2, message: 'ชื่อต้องมีอย่างน้อย 2 ตัวอักษร' }
                 ]}
               >
-                <Input 
+                <Input
                   prefix={<UserOutlined />}
-                  placeholder="ชื่อจริง" 
+                  placeholder="ชื่อจริง"
                 />
               </Form.Item>
             </Col>
@@ -270,9 +344,9 @@ const AgentRegister = () => {
                   { min: 2, message: 'นามสกุลต้องมีอย่างน้อย 2 ตัวอักษร' }
                 ]}
               >
-                <Input 
+                <Input
                   prefix={<UserOutlined />}
-                  placeholder="นามสกุล" 
+                  placeholder="นามสกุล"
                 />
               </Form.Item>
             </Col>

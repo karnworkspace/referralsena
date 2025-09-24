@@ -28,6 +28,7 @@ import {
   PhoneOutlined,
   IdcardOutlined,
   HomeOutlined,
+  ReloadOutlined,
   TeamOutlined,
   EyeOutlined
 } from '@ant-design/icons';
@@ -41,7 +42,7 @@ import {
   setPagination,
   clearError
 } from '../store/customersSlice';
-import { projectsAPI } from '../services/api';
+import { projectsAPI, customersAPI } from '../services/api';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -76,6 +77,10 @@ const CustomerManagement = () => {
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [viewingCustomer, setViewingCustomer] = useState(null);
   const [form] = Form.useForm();
+
+  // States for auto-increment customer code
+  const [nextCustomerCode, setNextCustomerCode] = useState('');
+  const [loadingCustomerCode, setLoadingCustomerCode] = useState(false);
 
   // State for projects list
   const [projectsList, setProjectsList] = useState([]);
@@ -353,11 +358,30 @@ const CustomerManagement = () => {
     }));
   };
 
+  // Fetch next customer code
+  const fetchNextCustomerCode = async () => {
+    try {
+      setLoadingCustomerCode(true);
+      const response = await customersAPI.getNextCode();
+      setNextCustomerCode(response.data.nextCustomerCode);
+      form.setFieldValue('customerCode', response.data.nextCustomerCode);
+    } catch (error) {
+      console.error('Error fetching next customer code:', error);
+      // Fallback to default if API fails
+      setNextCustomerCode('CU001');
+      form.setFieldValue('customerCode', 'CU001');
+    } finally {
+      setLoadingCustomerCode(false);
+    }
+  };
+
   // Handle create new customer
   const handleCreate = () => {
     setEditingCustomer(null);
     setIsModalVisible(true);
     form.resetFields();
+    // Fetch next customer code for new customer
+    fetchNextCustomerCode();
   };
 
   // Handle edit customer
@@ -558,16 +582,42 @@ const CustomerManagement = () => {
             <Col xs={24} sm={12}>
               <Form.Item
                 name="customerCode"
-                label="รหัสลูกค้า"
+                label={
+                  !editingCustomer ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      รหัสลูกค้า
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<ReloadOutlined />}
+                        onClick={fetchNextCustomerCode}
+                        loading={loadingCustomerCode}
+                        title="สร้างรหัสใหม่"
+                        style={{ padding: '0 4px', height: '20px', minWidth: '20px' }}
+                      />
+                    </div>
+                  ) : 'รหัสลูกค้า'
+                }
                 rules={[
                   { required: true, message: 'กรุณาใส่รหัสลูกค้า' },
                   { pattern: /^[A-Z0-9]+$/, message: 'รหัสลูกค้าควรเป็นตัวอักษรพิมพ์ใหญ่และตัวเลขเท่านั้น' }
                 ]}
               >
-                <Input 
-                  placeholder="เช่น CU001" 
-                  disabled={!!editingCustomer}
+                <Input
+                  placeholder={loadingCustomerCode ? "กำลังโหลด..." : nextCustomerCode || "เช่น CU001"}
+                  disabled={!editingCustomer}
+                  style={!editingCustomer ? {
+                    backgroundColor: '#f0f8ff',
+                    border: '1px solid #1890ff',
+                    color: '#1890ff',
+                    fontWeight: 'bold'
+                  } : {}}
                 />
+                {!editingCustomer && (
+                  <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
+                    💡 รหัสลูกค้าถูกสร้างโดยอัตโนมัติจากข้อมูลล่าสุดในระบบ
+                  </div>
+                )}
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
