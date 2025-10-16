@@ -58,6 +58,26 @@ services:
     networks:
       - sena_network
 
+  # phpMyAdmin - Database Management Tool
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: sena_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: sena_user
+      PMA_PASSWORD: sena_password
+      MYSQL_ROOT_PASSWORD: rootpassword
+      UPLOAD_LIMIT: 100M
+    ports:
+      - "8080:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - sena_network
+
 volumes:
   mysql_data:
     driver: local

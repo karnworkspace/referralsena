@@ -184,6 +184,7 @@ docker-compose up -d --build
   - `sena_mysql` - MySQL 8.0 database (Port 3306)
   - `sena_api` - Node.js Backend API (Port 4000)
   - `sena_web` - React Frontend (Port 3000)
+  - `sena_phpmyadmin` - phpMyAdmin Database GUI (Port 8080) ✨
 - **phpMyAdmin Investigation**:
   - พบ phpMyAdmin container ที่มีอยู่แล้ว (Port 8080)
   - ตรวจสอบและยืนยันว่าเชื่อมต่อกับ MySQL ที่ถูกต้อง
@@ -197,6 +198,20 @@ docker-compose up -d --build
   - เพิ่ม `.DS_Store` ใน `.gitignore` เพื่อป้องกันไฟล์ macOS system
   - Commit และ Push code ขึ้น GitHub (branch: ver2)
   - Git remote: `https://github.com/karnworkspace/referralsena.git`
+
+### 10. phpMyAdmin Integration ใน Docker Compose ✅
+- **เพิ่ม phpMyAdmin Service**: เพิ่มเข้าไปใน `docker-compose.yml`
+  - Container name: `sena_phpmyadmin` (สอดคล้องกับ naming convention)
+  - Image: `phpmyadmin/phpmyadmin:latest`
+  - Port: 8080:80
+  - Auto-start/stop: ใช้ `docker-compose up/down`
+- **ลบ Standalone Container**: ลบ phpMyAdmin container เก่าที่สร้างแยก
+- **Benefits**:
+  - ✅ Centralized management - จัดการทุก services ในที่เดียว
+  - ✅ Auto-start on boot - restart policy: unless-stopped
+  - ✅ Dependency management - รอให้ MySQL healthy ก่อน start
+  - ✅ Documentation - configuration tracked ใน Git
+  - ✅ Team consistency - ทุกคนใช้ environment เดียวกัน
 
 ## 🗄️ Database Schema & Structure
 
@@ -231,8 +246,8 @@ volumes:
 
 ### **phpMyAdmin (Database Management)**
 - **URL**: http://localhost:8080
-- **Container**: `phpmyadmin` (ไม่ได้อยู่ใน docker-compose.yml แต่ใช้งานได้)
-- **Status**: ✅ Verified - เชื่อมต่อกับ `sena_mysql` ถูกต้อง
+- **Container**: `sena_phpmyadmin` (managed by docker-compose)
+- **Status**: ✅ Integrated - auto-start/stop with docker-compose
 - **Network**: `projectrefer_sena_network`
 - **Credentials**:
   - Server: `sena_mysql`
@@ -252,11 +267,20 @@ Root Password: rootpassword
 
 ### **การใช้งาน phpMyAdmin:**
 ```bash
-# Start phpMyAdmin
-docker start phpmyadmin
+# Start phpMyAdmin (auto-start กับ docker-compose)
+docker-compose up -d phpmyadmin
+
+# หรือ start ทุก services พร้อมกัน
+docker-compose up -d
 
 # Stop phpMyAdmin
-docker stop phpmyadmin
+docker-compose stop phpmyadmin
+
+# Restart phpMyAdmin
+docker-compose restart phpmyadmin
+
+# ดู logs
+docker-compose logs -f phpmyadmin
 
 # เข้าใช้งาน
 open http://localhost:8080
