@@ -123,7 +123,7 @@ const LoginPage = () => {
 
             <div style={{ textAlign: 'center', marginTop: '16px' }}>
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                ทดสอบระบบ: admin@test.com / 123456
+                ทดสอบระบบ: admin@test.com/password
               </Text>
             </div>
           </Card>

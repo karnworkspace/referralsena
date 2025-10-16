@@ -389,47 +389,19 @@ const AgentRegister = () => {
               { pattern: /^[0-9]+$/, message: 'เลขประจำตัวประชาชนควรเป็นตัวเลขเท่านั้น' }
             ]}
           >
-            <Input 
+            <Input
               prefix={<IdcardOutlined />}
-              placeholder="1234567890123" 
+              placeholder="1234567890123"
               maxLength={13}
             />
           </Form.Item>
 
-          <Form.Item
-            name="password"
-            label="รหัสผ่าน"
-            rules={[
-              { required: true, message: 'กรุณาใส่รหัสผ่าน' },
-              { min: 6, message: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร' }
-            ]}
-          >
-            <Input.Password 
-              prefix={<LockOutlined />}
-              placeholder="รหัสผ่าน" 
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="confirmPassword"
-            label="ยืนยันรหัสผ่าน"
-            rules={[
-              { required: true, message: 'กรุณายืนยันรหัสผ่าน' },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue('password') === value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error('รหัสผ่านไม่ตรงกัน'));
-                },
-              }),
-            ]}
-          >
-            <Input.Password 
-              prefix={<LockOutlined />}
-              placeholder="ยืนยันรหัสผ่าน" 
-            />
-          </Form.Item>
+          <Alert
+            message="💡 ข้อมูลสำคัญ: รหัสผ่านของคุณคือเลขประจำตัวประชาชน 13 หลัก"
+            type="info"
+            showIcon
+            style={{ marginBottom: '24px' }}
+          />
 
           <Form.Item style={{ marginBottom: '16px' }}>
             <Button 

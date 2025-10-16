@@ -11,25 +11,28 @@
 - **Deployment**: Docker + Docker Compose
 - **Activity Logging**: MySQL Triggers + JSON Storage
 
-## Project Structure
+## 📁 Project Structure
 
 ```
-referral-system-new/
+Projectrefer/
 ├── backend/                 # Node.js Backend API
+│   ├── server-mysql.js      # Main server file (MySQL + Sequelize)
+│   ├── config/              # Database configuration
+│   ├── models/              # Sequelize models (Users, Agents, Customers, Projects)
+│   └── uploads/             # File uploads directory
+├── frontend/                # React Frontend
 │   ├── src/
-│   │   ├── config/         # Database และ configuration
-│   │   ├── models/         # Sequelize models
-│   │   ├── controllers/    # API controllers
-│   │   ├── routes/         # API routes
-│   │   ├── middleware/     # Authentication, validation
-│   │   ├── services/       # Business logic
-│   │   └── utils/          # Helper functions
-│   ├── uploads/            # File uploads
-│   ├── scripts/            # Database scripts
-│   └── tests/              # Unit tests
-├── frontend/               # React Frontend
-├── docs/                   # Documentation
-└── database-schema.sql     # Database schema
+│   │   ├── pages/           # Main pages (Dashboard, AgentManagement, CustomerManagement, ProjectManagement)
+│   │   ├── components/      # Reusable components
+│   │   │   └── charts/      # Dashboard charts (StatisticsBarChart, CustomerStatusPieChart, TrendLineChart, PerformanceAreaChart)
+│   │   ├── store/           # Redux slices (auth, agents, customers, projects)
+│   │   └── services/        # API services
+│   ├── public/              # Static assets
+│   └── package.json         # Dependencies (React 18, Vite, Ant Design, Redux Toolkit)
+├── database-schema.sql      # Complete database schema
+├── docker-compose.yml       # Docker configuration (MySQL, API, Frontend, phpMyAdmin)
+├── CLAUDE.md               # Project memory & context
+└── README.md               # This file
 ```
 
 ## 🐳 Quick Start with Docker (แนะนำ)
@@ -68,6 +71,60 @@ referral-system-new/
 - **MySQL Database**: `sena_mysql` container (port 3306)
 - **Backend API**: `sena_api` container (port 4000)
 - **Frontend Web**: `sena_web` container (port 3000)
+- **Database GUI**: `sena_phpmyadmin` container (port 8080)
+
+## 🔐 Role Management & Permissions
+
+ระบบ SENA Agent มี **2 Roles** หลักในการจัดการสิทธิ์การใช้งาน:
+
+### 👑 **Admin (ผู้ดูแลระบบ)**
+
+**สิทธิ์**: Full Access ทุกฟีเจอร์ในระบบ
+
+**หน้าที่เข้าถึง**:
+- **`/admin/dashboard`** - แดชบอร์ดหลักพร้อม charts และสถิติครบถ้วน
+- **Agent Management** - จัดการเอเจนต์ทุกคน (CRUD)
+- **Customer Management** - จัดการลูกค้าทุกคน (CRUD)
+- **Project Management** - จัดการโครงการอสังหาริมทรัพย์ (CRUD)
+- **Reports** - เมนูสำหรับดูรายงานต่างๆ
+
+**ฟีเจอร์พิเศษ**:
+- ✅ อนุมัติ/ปฏิเสธเอเจนต์ใหม่
+- ✅ ดูข้อมูลทั้งหมดในระบบ
+- ✅ เปลี่ยนสถานะได้ทุกอย่าง
+- ✅ มองเห็นสถิติรวม (Dashboard Charts, Statistics, Activities)
+- ✅ จัดการ projects และ price ranges
+
+### 👤 **Agent (เอเจนต์)**
+
+**สิทธิ**: Limited Access - เฉพาะข้อมูลตัวเอง
+
+**หน้าที่เข้าถึง**:
+- **`/agent/dashboard`** - แดชบอร์ดเฉพาะข้อมูลของตัวเอง
+- **Profile Management** - ดู/แก้ไขข้อมูลส่วนตัว
+- **Customer View** - ดูเฉพาะลูกค้าที่ตัวเองรับผิดชอบ
+
+**ฟีเจอร์ที่ทำได้**:
+- ✅ ดูรายชื่อลูกค้าของตัวเอง
+- ✅ แก้ไขเบอร์โทรศัพท์และข้อมูลส่วนตัว
+- ✅ ดูสถิติส่วนตัว (ยอดลูกค้า, ยอดขาย)
+- ❌ ไม่สามารถจัดการเอเจนต์คนอื่น
+- ❌ ไม่สามารถจัดการลูกค้าคนอื่น
+- ❌ ไม่สามารถจัดการโครงการ
+
+### 🔐 **ระบบความปลอดภัย (Security Features)**
+
+- **Route Protection**: ตรวจสอบสิทธิ์ก่อนเข้าหน้าต่างๆ (ProtectedRoute/PublicRoute)
+- **API Authentication**: Bearer Token สำหรับทุกการเรียก API
+- **Data Filtering**: Backend กรองข้อมูลตาม `agentId` ของตัวเอง
+- **Auto Logout**: ทำอัตโนมัติเมื่อ token หมดอายุ (401 Unauthorized)
+- **Session Management**: Token เก็บใน localStorage
+
+### 📱 **User Experience แยกตาม Role**
+
+- **Admin UI**: แสดง "ผู้ดูแลระบบ" พร้อมเมนูครบถ้วน
+- **Agent UI**: แสดง "เอเจนต์" พร้อมรหัสเอเจนต์ (เช่น AG007)
+- **Dashboard Layout**: Admin ดูข้อมูลรวม, Agent ดูเฉพาะข้อมูลตัวเอง
 
 ## 🗄️ Database Setup และ Activity Logging
 
@@ -144,7 +201,7 @@ ORDER BY al.created_at DESC;
 
 ### 🛠️ Manual Setup (สำหรับ Development)
 
-หากต้องการ setup แบบ manual:
+หากต้องการ setup แบบ manual (ไม่ใช้ Docker):
 
 1. **ติดตั้ง Dependencies**
    ```bash
@@ -160,29 +217,18 @@ ORDER BY al.created_at DESC;
 3. **Import Database Schema**
    ```bash
    mysql -u root -p sena_referral < database-schema.sql
-   mysql -u root -p sena_referral < customer-audit-triggers.sql
-   mysql -u root -p sena_referral < init-database.sql
    ```
 
-4. **แก้ไขไฟล์ Environment**
-   ```env
-   # backend/.env
-   DB_HOST=localhost
-   DB_PORT=3306
-   DB_USER=root
-   DB_PASSWORD=your_password
-   DB_NAME=sena_referral
-   JWT_SECRET=your-super-secret-jwt-key
-   ```
-
-5. **เริ่มต้น Services**
+4. **เริ่มต้น Services**
    ```bash
    # Terminal 1: Backend
-   cd backend && npm run dev
+   cd backend && node server-mysql.js
 
    # Terminal 2: Frontend
    cd frontend && npm run dev
    ```
+
+**⚠️ หมายเหตุ**: แนะนำให้ใช้ Docker เพื่อความสะดวกและความสม่ำเสมอของ environment
 
 ## 🔌 API Endpoints
 
@@ -198,18 +244,33 @@ ORDER BY al.created_at DESC;
 - `POST /api/auth/logout` - ออกจากระบบ
 
 ### Agents Management
-- `GET /api/agents` - ดึงรายการเอเจนต์ทั้งหมด
+- `GET /api/agents` - ดึงรายการเอเจนต์ทั้งหมด (Admin เท่านั้น)
 - `GET /api/agents/list` - ดึงรายชื่อเอเจนต์สำหรับ dropdown
 - `GET /api/agents/:id` - ดึงข้อมูลเอเจนต์ตาม ID
-- `PUT /api/agents/:id` - อัพเดทข้อมูลเอเจนต์
-- `PUT /api/agents/profile` - แก้ไขข้อมูลส่วนตัว (เอเจนต์)
+- `GET /api/agents/next-code` - ดึงรหัสเอเจนต์ถัดไป (Auto increment)
+- `POST /api/agents` - สร้างเอเจนต์ใหม่ (Admin เท่านั้น)
+- `PUT /api/agents/:id` - อัพเดทข้อมูลเอเจนต์ (Admin เท่านั้น)
+- `PUT /api/agents/profile` - แก้ไขข้อมูลส่วนตัว (Agent เท่านั้น)
+- `PUT /api/agents/:id/approve` - อนุมัติเอเจนต์ (Admin เท่านั้น)
+- `PUT /api/agents/:id/reject` - ปฏิเสธเอเจนต์ (Admin เท่านั้น)
 
 ### Customers Management
-- `GET /api/customers` - ดึงรายการลูกค้าทั้งหมด
+- `GET /api/customers` - ดึงรายการลูกค้า (Admin: ทั้งหมด, Agent: เฉพาะของตัวเอง)
 - `GET /api/customers/:id` - ดึงข้อมูลลูกค้าตาม ID
-- `POST /api/customers` - สร้างลูกค้าใหม่
-- `PUT /api/customers/:id` - อัพเดทข้อมูลลูกค้า
-- `DELETE /api/customers/:id` - ลบลูกค้า
+- `POST /api/customers` - สร้างลูกค้าใหม่ (Admin เท่านั้น)
+- `PUT /api/customers/:id` - อัพเดทข้อมูลลูกค้า (Admin: ทุกคน, Agent: เฉพาะของตัวเอง)
+- `DELETE /api/customers/:id` - ลบลูกค้า (Admin เท่านั้น)
+
+### Projects Management
+- `GET /api/projects` - ดึงรายการโครงการทั้งหมด
+- `GET /api/projects/:id` - ดึงข้อมูลโครงการตาม ID
+- `POST /api/projects` - สร้างโครงการใหม่ (Admin เท่านั้น)
+- `PUT /api/projects/:id` - อัพเดทข้อมูลโครงการ (Admin เท่านั้น)
+- `DELETE /api/projects/:id` - ลบโครงการ (Admin เท่านั้น)
+
+### Dashboard Statistics
+- `GET /api/dashboard/stats` - ดึงข้อมูลสถิติ Dashboard (Admin เท่านั้น)
+- `GET /api/dashboard/agent-stats` - ดึงข้อมูลสถิติส่วนตัว (Agent เท่านั้น)
 
 ### 🔐 ข้อมูลการเข้าสู่ระบบ
 
@@ -275,77 +336,115 @@ FROM customer_history
 WHERE customer_id = 1;
 ```
 
-### Error Troubleshooting
-
-#### Common Issues
-
-1. **Database Connection Error**
-   - ตรวจสอบว่า MySQL server กำลังทำงาน
-   - ตรวจสอบ username/password ในไฟล์ `.env`
-   - ตรวจสอบว่าฐานข้อมูล `referral_system` ถูกสร้างแล้ว
-
-2. **Port Already in Use**
-   - เปลี่ยน PORT ในไฟล์ `.env`
-   - หรือหยุด process ที่ใช้ port 5000
-
-3. **Module Not Found Error**
-   - รัน `npm install` ใหม่
-   - ลบโฟลเดอร์ `node_modules` และ `package-lock.json` แล้วติดตั้งใหม่
-
-4. **API Error 500**
-   - ตรวจสอบ logs ใน console
-   - ตรวจสอบการเชื่อมต่อฐานข้อมูล
-   - ตรวจสอบไฟล์ `.env`
-
-### Available Scripts
-
-```bash
-npm start       # เริ่ม production server
-npm run dev     # เริ่ม development server with nodemon
-npm test        # รัน tests
-npm run db:migrate    # รัน database migrations
-npm run db:seed       # เพิ่ม sample data
-```
-
-### Database Schema
+### 🗄️ Database Schema
 
 ระบบใช้ฐานข้อมูลดังนี้:
 
-- **users** - ข้อมูลผู้ใช้และการยืนยันตัวตน
-- **agents** - ข้อมูลเอเจนต์
-- **projects** - ข้อมูลโครงการ
-- **customers** - ข้อมูลลูกค้า
-- **visits** - ข้อมูลการนัดหมายชมโครงการ
-- **sales** - ข้อมูลการขาย
-- **leads** - ข้อมูล Lead
-- **requests** - คำร้องต่างๆ
-- **activity_logs** - บันทึกการใช้งาน
+- **users** - ข้อมูลผู้ใช้และการยืนยันตัวตน (11 records)
+- **agents** - ข้อมูลเอเจนต์ (6 records)
+- **projects** - ข้อมูลโครงการอสังหาริมทรัพย์ (3 records)
+- **customers** - ข้อมูลลูกค้า (6 records)
+- **visits** - ข้อมูลการนัดหมายชมโครงการ (0 records)
+- **sales** - ข้อมูลการขาย (0 records)
+- **leads** - ข้อมูล Lead (2 records)
+- **requests** - คำร้องต่างๆ (0 records)
+- **activity_logs** - บันทึกการใช้งานและการเปลี่ยนแปลง
 
-### Development
+### 📋 Customer Status System
 
-#### Adding New Features
+ระบบจัดการสถานะลูกค้าแบบ 3 สถานะ:
 
-1. สร้าง Model ใน `src/models/`
-2. สร้าง Controller ใน `src/controllers/`
-3. สร้าง Routes ใน `src/routes/`
-4. เพิ่ม Validation ใน `src/middleware/validation.js`
-5. เพิ่ม Tests ใน `tests/`
+- ✅ **ใช้งาน (active)** - สีเขียว
+- ❌ **ไม่ใช้งาน (inactive)** - สีแดง
+- ⏳ **รออนุมัติ (pending)** - สีส้ม
 
-#### Code Style
+### 🔧 Available Scripts
 
-- ใช้ CommonJS modules (require/module.exports)
-- ใช้ async/await สำหรับ asynchronous operations
-- Error handling ด้วย try-catch
-- Response format: `{ success: boolean, message: string, data?: any }`
+```bash
+# Frontend
+cd frontend && npm run dev     # เริ่ม development server
+cd frontend && npm run build   # Build สำหรับ production
 
-## Contributing
+# Backend
+cd backend && node server-mysql.js    # เริ่ม server (MySQL version)
 
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+# Docker Commands
+docker-compose up -d          # เริ่มทุก containers
+docker-compose down           # หยุดทุก containers
+docker-compose logs -f        # ดู logs
+```
 
-## License
+### 🚨 Error Troubleshooting
+
+#### Common Issues
+
+1. **Docker Container Issues**
+   ```bash
+   docker-compose down -v && docker-compose up -d
+   # Reset และเริ่มใหม่ (ข้อมูลจะหายหมด)
+   ```
+
+2. **Database Connection Error**
+   - ตรวจสอบว่า MySQL container กำลังทำงาน: `docker ps`
+   - ตรวจสอบว่า database ถูกสร้าง: `docker exec -it sena_mysql mysql -usena_user -psena_password -e "SHOW DATABASES;"`
+
+3. **Port Already in Use**
+   - ตรวจสอบว่า ports 3000, 4000, 3306, 8080 ว่าง
+   - ใช้ `lsof -i :3000` เพื่อดูว่าใครใช้ port อยู่
+
+4. **Frontend Not Loading**
+   - ตรวจสอบว่า API server ทำงาน: `curl http://localhost:4000/health`
+   - ตรวจสอบ logs: `docker-compose logs -f sena_web`
+
+5. **API Error 500**
+   - ตรวจสอบ backend logs: `docker-compose logs -f sena_api`
+   - ตรวจสอบ database connection: `docker exec -it sena_mysql mysql -usena_user -psena_password sena_referral`
+
+### 🎯 Current Features (สถานะล่าสุด)
+
+✅ **สมบูรณ์แล้ว**:
+- Authentication & Authorization (Admin/Agent Roles)
+- Agent Management (CRUD + Approval System)
+- Customer Management (CRUD + 3 Status System)
+- Project Management (CRUD + Price Range Validation)
+- Dashboard with Charts (Recharts Integration)
+- Docker Infrastructure (4 Containers)
+- Activity Logging & Audit Trail
+- Auto-increment Agent Code System
+- Database Integration (MySQL + Sequelize)
+
+🔄 **พัฒนาต่อ**:
+- Reports & Analytics
+- Notification System
+- File Upload Functionality
+- Multi-language Support
+
+## 📞 การติดต่อและ Support
+
+### 🛠️ Development Tools
+
+- **phpMyAdmin** - จัดการฐานข้อมูลผ่านเว็บ: http://localhost:8080
+  - Server: `sena_mysql`
+  - Username: `sena_user`
+  - Password: `sena_password`
+  - Database: `sena_referral`
+
+### 📚 เอกสารเพิ่มเติม
+
+- **CLAUDE.md** - Project memory และ context ฉบับละเอียด
+- **note.md** - Configuration และคำสั่งสำคัญ
+- **database-schema.sql** - โครงสร้างฐานข้อมูลฉบับเต็ม
+
+### 🔄 Git Repository
+
+- **Remote**: `https://github.com/karnworkspace/referralsena.git`
+- **Branch**: `ver2` (Development branch)
+- **Status**: Active development
+
+## 📄 License
 
 This project is licensed under the MIT License.
+
+---
+
+*อัพเดตล่าสุด: 2025-10-16 - Role Management & Permissions Documentation*

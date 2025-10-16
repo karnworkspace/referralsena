@@ -720,7 +720,7 @@ const AgentManagementNew = () => {
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <Text strong>ข้อโครงการ:</Text>
+              <Text strong>ข้อมูลโครงการ:</Text>
               <br />
               <Text style={{ fontSize: '16px' }}>-</Text>
             </div>

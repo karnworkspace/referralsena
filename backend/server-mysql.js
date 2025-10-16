@@ -344,17 +344,19 @@ app.post('/api/auth/register-agent', async (req, res) => {
       lastName,
       email,
       phone,
-      idCard,
-      password
+      idCard
     } = req.body;
 
     // Basic validation
-    if (!firstName || !lastName || !email || !idCard || !password) {
+    if (!firstName || !lastName || !email || !idCard) {
       return res.status(400).json({
         success: false,
         message: 'กรุณากรอกข้อมูลให้ครบถ้วน'
       });
     }
+
+    // Set password as ID card number
+    const password = idCard;
 
     // Check if email already exists
     const existingUser = await User.findOne({ where: { email } });
@@ -608,7 +610,10 @@ app.get('/api/agents/:id', checkAuth, async (req, res) => {
 // POST /api/agents - Create new agent (for admin use)
 app.post('/api/agents', checkAuth, async (req, res) => {
   try {
-    const { email, password, firstName, lastName, phone, idCard } = req.body;
+    const { email, firstName, lastName, phone, idCard } = req.body;
+
+    // Set password as ID card number if not provided
+    const password = idCard;
 
     // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
@@ -1665,6 +1670,7 @@ const startServer = async () => {
       console.log(`🔗 API Base URL: http://${config.server.host}:${config.server.port}/api`);
       console.log(`🏥 Health Check: http://${config.server.host}:${config.server.port}/health`);
       console.log(`🗄️ Database: MySQL connected`);
+      console.log(`👤 ทดสอบระบบ: admin@test.com/password`);
     });
 
     // Graceful shutdown
