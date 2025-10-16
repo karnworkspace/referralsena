@@ -122,3 +122,4 @@ node_modules/
 databaseset.md
 sqlguide.md
 *backup*.sql
+.DS_Store
