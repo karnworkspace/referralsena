@@ -179,5 +179,142 @@ docker-compose up -d --build
 - ✅ **Authentication**: Login/logout system
 - ✅ **Database**: MySQL พร้อม associations และ proper schema
 
+### 9. Docker Infrastructure และ Database Investigation ✅
+- **Docker Compose Setup**: ตรวจสอบโครงสร้าง Docker containers
+  - `sena_mysql` - MySQL 8.0 database (Port 3306)
+  - `sena_api` - Node.js Backend API (Port 4000)
+  - `sena_web` - React Frontend (Port 3000)
+- **phpMyAdmin Investigation**:
+  - พบ phpMyAdmin container ที่มีอยู่แล้ว (Port 8080)
+  - ตรวจสอบและยืนยันว่าเชื่อมต่อกับ MySQL ที่ถูกต้อง
+  - Connection: `PMA_HOST=sena_mysql`, `PMA_USER=sena_user`
+  - Network: `projectrefer_sena_network` (ถูกต้อง)
+- **Database Verification**:
+  - ยืนยันข้อมูลตรงกันระหว่าง phpMyAdmin และ MySQL container
+  - พบ 6 agents (AG001-AG007) ในระบบ
+  - ข้อมูล: 11 users, 6 agents, 6 customers, 3 projects
+- **Git Management**:
+  - เพิ่ม `.DS_Store` ใน `.gitignore` เพื่อป้องกันไฟล์ macOS system
+  - Commit และ Push code ขึ้น GitHub (branch: ver2)
+  - Git remote: `https://github.com/karnworkspace/referralsena.git`
+
+## 🗄️ Database Schema & Structure
+
+### **Tables ในระบบ:**
+```
+📊 Database: sena_referral
+├── users (11 records) - Authentication และ user accounts
+├── agents (6 records) - ข้อมูลเอเจนต์
+├── customers (6 records) - ข้อมูลลูกค้า
+├── projects (3 records) - โครงการอสังหาริมทรัพย์
+├── visits (0 records) - การนัดหมายชมโครงการ
+├── sales (0 records) - ข้อมูลการขาย
+├── leads (2 records) - Lead ที่ยังไม่เป็นลูกค้า
+├── requests (0 records) - คำร้องต่างๆ
+└── activity_logs - Audit trail
+```
+
+### **Database Files:**
+- `database-schema.sql` - โครงสร้างตารางทั้งหมด
+- `customer-audit-triggers.sql` - Triggers สำหรับ audit log
+- `init-database.sql` - Sample data สำหรับทดสอบ
+
+### **Docker Volume Mount:**
+```yaml
+volumes:
+  - ./database-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+  - ./customer-audit-triggers.sql:/docker-entrypoint-initdb.d/02-triggers.sql
+  - ./init-database.sql:/docker-entrypoint-initdb.d/03-sample-data.sql
+```
+
+## 🔧 Development Tools
+
+### **phpMyAdmin (Database Management)**
+- **URL**: http://localhost:8080
+- **Container**: `phpmyadmin` (ไม่ได้อยู่ใน docker-compose.yml แต่ใช้งานได้)
+- **Status**: ✅ Verified - เชื่อมต่อกับ `sena_mysql` ถูกต้อง
+- **Network**: `projectrefer_sena_network`
+- **Credentials**:
+  - Server: `sena_mysql`
+  - Username: `sena_user`
+  - Password: `sena_password`
+  - Database: `sena_referral`
+
+### **MySQL Connection Info:**
+```
+Host: localhost
+Port: 3306
+Database: sena_referral
+Username: sena_user
+Password: sena_password
+Root Password: rootpassword
+```
+
+### **การใช้งาน phpMyAdmin:**
+```bash
+# Start phpMyAdmin
+docker start phpmyadmin
+
+# Stop phpMyAdmin
+docker stop phpmyadmin
+
+# เข้าใช้งาน
+open http://localhost:8080
+```
+
+## 🐳 Docker Commands (ที่ใช้บ่อย)
+
+```bash
+# Start ทุก containers
+docker-compose up -d
+
+# Start พร้อม rebuild
+docker-compose up -d --build
+
+# Stop ทุก containers
+docker-compose down
+
+# Reset database (ลบ volumes)
+docker-compose down -v
+
+# ดูสถานะ containers
+docker-compose ps
+docker ps -a
+
+# ดู logs
+docker-compose logs -f
+docker logs sena_mysql
+docker logs sena_api
+
+# เข้า MySQL CLI
+docker exec -it sena_mysql mysql -usena_user -psena_password sena_referral
+
+# Start phpMyAdmin
+docker start phpmyadmin
+```
+
+## 📦 แนวทางการนำเข้า SQL ไฟล์เดิม
+
+ถ้ามี SQL ไฟล์เดิมที่ต้องการนำเข้า มี 4 วิธี:
+
+### **วิธีที่ 1: Docker Volume Mount (แนะนำ)**
+```yaml
+# เพิ่มใน docker-compose.yml
+volumes:
+  - ./your-data.sql:/docker-entrypoint-initdb.d/04-import-data.sql
+```
+จากนั้น: `docker-compose down -v && docker-compose up -d`
+
+### **วิธีที่ 2: MySQL Command Line**
+```bash
+docker exec -i sena_mysql mysql -usena_user -psena_password sena_referral < your-data.sql
+```
+
+### **วิธีที่ 3: Node.js Import Script**
+สร้าง script ใน `backend/scripts/import-sql.js`
+
+### **วิธีที่ 4: phpMyAdmin Import**
+เข้า http://localhost:8080 → Import tab → เลือกไฟล์ SQL
+
 ---
-*อัพเดตล่าสุด: Agent Code Auto-Increment System พร้อม UX Enhancements*
+*อัพเดตล่าสุด: Docker Infrastructure Investigation, phpMyAdmin Verification, และ Database Schema Documentation (2025-01-XX)*
