@@ -340,5 +340,57 @@ docker exec -i sena_mysql mysql -usena_user -psena_password sena_referral < your
 ### **วิธีที่ 4: phpMyAdmin Import**
 เข้า http://localhost:8080 → Import tab → เลือกไฟล์ SQL
 
+### 11. Customer & Agent Data Display Bug Fix ✅ (Latest)
+**ปัญหา**: รายละเอียดลูกค้าและ agent ไม่ถูกนำมาแสดงที่ frontend
+- **ผู้ใช้รายงาน**: ตาราง Customer Management ไม่แสดงข้อมูลเอเจนต์และโครงการ
+- **วันที่แก้ไข**: 2025-10-16
+
+**สาเหตุ**:
+- Sequelize associations ถูกกำหนดซ้ำ 2 ครั้งใน `server-mysql.js`
+  - บรรทัด 20-49: กำหนดถูกต้อง (มี `as: 'agent'`, `as: 'project'`)
+  - บรรทัด 1666-1667: กำหนดซ้ำ (ไม่มี `as` property)
+- Sequelize ใช้ associations ตัวหลังที่ไม่มี `as` property
+- ทำให้ API query ที่ใช้ `include: [{ model: Agent, as: 'agent' }]` ใช้งานไม่ได้
+
+**การแก้ไข**:
+1. ตรวจสอบและพบปัญหา duplicate associations
+2. ลบ associations ที่ซ้ำออก (บรรทัด 1666-1667)
+3. รักษา associations หลักที่ถูกต้องไว้ (บรรทัด 20-49)
+4. Restart API container
+5. ทดสอบ API response เพื่อยืนยันข้อมูลแสดงถูกต้อง
+
+**ผลลัพธ์**:
+- ✅ API server ทำงานปกติ
+- ✅ ข้อมูล agent แสดงในรูปแบบ "AG007 - นายอดินันท์"
+- ✅ ข้อมูล project แสดงชื่อโครงการได้ถูกต้อง
+- ✅ Frontend แสดงข้อมูลครบถ้วน
+- ✅ Push code ขึ้น GitHub (branch: ver2)
+
+**API Test Result**:
+```json
+{
+  "id": 13,
+  "firstName": "ชายสี่",
+  "lastName": "หมี่เกี๊ยว",
+  "agent": {
+    "id": 8,
+    "agentCode": "AG007",
+    "firstName": "นายอดินันท์",
+    "lastName": "โอห์ม"
+  },
+  "project": {
+    "id": 1,
+    "projectName": "Sena Village Tiwanon"
+  }
+}
+```
+
 ---
-*อัพเดตล่าสุด: Docker Infrastructure Investigation, phpMyAdmin Verification, และ Database Schema Documentation (2025-01-XX)*
+*อัพเดตล่าสุด: Customer & Agent Data Display Bug Fix - Sequelize Associations Issue (2025-10-16)*
+
+## 📋 คำแนะนำสำหรับ Claude
+- **ภาษาไทยเป็นหลัก**: ผู้ใช้ต้องการสนทนาเป็นภาษาไทยเสมอ
+- **Context Management**: อัพเดท CLAUDE.md ทุกครั้งหลัง commit
+- **Compress Context**: บีบอัดข้อมูลเก่าๆ ให้กระชับแต่ครบถ้วน
+- **Technical Focus**: เน้นปัญหาที่แก้ไขและสาเหตุ
+- **Git Workflow**: commit และ push ทุกครั้งที่มีการเปลี่ยนแปลงสำคัญ
