@@ -124,3 +124,6 @@ sqlguide.md
 *backup*.sql
 .DS_Store
 README.md
+
+# Server deployment checklist (contains sensitive server info)
+server-todo.md
