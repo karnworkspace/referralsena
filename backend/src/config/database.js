@@ -1,6 +1,5 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
-
 const sequelize = new Sequelize({
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 3306,
@@ -8,6 +7,8 @@ const sequelize = new Sequelize({
   username: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   dialect: 'mysql',
+  charset: 'utf8mb4',
+  collate: 'utf8mb4_unicode_ci',
   dialectOptions: {
     charset: 'utf8mb4',
     collate: 'utf8mb4_unicode_ci',
