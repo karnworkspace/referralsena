@@ -69,6 +69,7 @@ export const agentsAPI = {
   delete: (id) => api.delete(`/agents/${id}`),
   getList: () => api.get('/agents/list'),
   getNextCode: () => api.get('/agents/next-code'),
+  updateProfile: (data) => api.put('/agents/profile', data),
 };
 
 // Customers API

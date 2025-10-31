@@ -35,6 +35,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser, updateUser } from '../store/authSlice';
 import { fetchCustomers } from '../store/customersSlice';
+import { agentsAPI } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 const { Header, Sider, Content } = Layout;
@@ -80,33 +81,16 @@ const AgentDashboard = () => {
     profileForm.resetFields();
   };
 
-  const handleUpdateProfile = async (values) => {
+const handleUpdateProfile = async (values) => {
     setLoading(true);
     try {
-      // Call API to update profile
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/agents/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(values)
+      const response = await agentsAPI.updateProfile(values);
+      notification.success({
+        message: 'สำเร็จ',
+        description: 'อัพเดทเบอร์โทรสำเร็จ'
       });
-
-      const data = await response.json();
-
-      if (data.success) {
-        notification.success({
-          message: 'สำเร็จ',
-          description: 'อัพเดทเบอร์โทรสำเร็จ'
-        });
-        setIsEditingProfile(false);
-        // Update user data in Redux store
-        dispatch(updateUser(data.data));
-      } else {
-        throw new Error(data.message);
-      }
+      setIsEditingProfile(false);
+      dispatch(updateUser(response.data));
     } catch (error) {
       notification.error({
         message: 'เกิดข้อผิดพลาด',
@@ -116,7 +100,6 @@ const AgentDashboard = () => {
       setLoading(false);
     }
   };
-
   const userMenuItems = [
     {
       key: 'profile',

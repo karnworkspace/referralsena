@@ -570,6 +570,54 @@ app.get('/api/agents/next-code', async (req, res) => {
   }
 });
 
+// PUT /api/agents/profile - Agent แก้ไขข้อมูลตัวเอง
+app.put('/api/agents/profile', checkAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { phone } = req.body;
+
+    console.log('=== Update Profile ===');
+    console.log('userId:', userId);
+    console.log('phone:', phone);
+
+    // หา agent จาก userId
+    const agent = await Agent.findOne({ where: { userId } });
+
+    console.log('agent found:', agent ? 'YES' : 'NO');
+    if (agent) {
+      console.log('agent.id:', agent.id);
+      console.log('agent.userId:', agent.userId);
+    }
+
+    if (!agent) {
+      return res.status(404).json({
+        success: false,
+        message: 'ไม่พบข้อมูลเอเจนต์'
+      });
+    }
+
+    // อัพเดทเฉพาะเบอร์โทร
+    await agent.update({
+      phone: phone || null
+    });
+
+    res.json({
+      success: true,
+      message: 'อัพเดทข้อมูลสำเร็จ',
+      data: {
+        phone: agent.phone
+      }
+    });
+
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการอัพเดทข้อมูล'
+    });
+  }
+});
+
 // GET /api/agents/:id - Get agent by ID
 app.get('/api/agents/:id', checkAuth, async (req, res) => {
   try {
@@ -823,57 +871,6 @@ app.delete('/api/agents/:id', checkAuth, async (req, res) => {
     });
   }
 });
-
-// PUT /api/agents/profile - Update agent's own profile
-app.put('/api/agents/profile', checkAuth, async (req, res) => {
-  try {
-    // Only agents can update their own profile
-    if (req.user.role !== 'agent') {
-      return res.status(403).json({
-        success: false,
-        message: 'เฉพาะเอเจนต์เท่านั้นที่สามารถแก้ไขข้อมูลส่วนตัวได้'
-      });
-    }
-
-    const agent = await Agent.findOne({ where: { userId: req.user.id } });
-
-    if (!agent) {
-      return res.status(404).json({
-        success: false,
-        message: 'ไม่พบข้อมูลเอเจนต์'
-      });
-    }
-
-    const { phone } = req.body;
-
-    // Agents can only update their phone number
-    await agent.update({ phone: phone || '' });
-
-    res.json({
-      success: true,
-      message: 'อัพเดทเบอร์โทรสำเร็จ',
-      data: {
-        id: req.user.id,
-        email: req.user.email,
-        role: 'agent',
-        agentId: agent.id,
-        agentCode: agent.agentCode,
-        firstName: agent.firstName,
-        lastName: agent.lastName,
-        phone: agent.phone,
-        status: agent.status
-      }
-    });
-
-  } catch (error) {
-    console.error('Update agent profile error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'เกิดข้อผิดพลาดในการอัพเดทข้อมูลส่วนตัว'
-    });
-  }
-});
-
 // ==================== CUSTOMERS ENDPOINTS ====================
 
 // GET /api/customers - Get all customers
