@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Layout, 
-  Menu, 
-  Button, 
-  Avatar, 
-  Dropdown, 
-  Typography, 
-  Card, 
-  Row, 
-  Col, 
+import {
+  Layout,
+  Menu,
+  Button,
+  Avatar,
+  Dropdown,
+  Typography,
+  Card,
+  Row,
+  Col,
   Statistic,
   Space,
   Badge,
@@ -82,17 +82,7 @@ const AgentDashboard = () => {
 
   const handleUpdateProfile = async (values) => {
     setLoading(true);
-    try {
-      // Call API to update profile
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/agents/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(values)
-      });
+
 
       const data = await response.json();
 
@@ -154,7 +144,7 @@ const AgentDashboard = () => {
   ];
 
   // Filter customers for current agent
-  const myCustomers = customers.filter(customer => 
+  const myCustomers = customers.filter(customer =>
     customer.agentId === user?.agentId
   ).map(customer => ({
     key: customer.id,
@@ -244,10 +234,10 @@ const AgentDashboard = () => {
                 </Card>
               </Col>
             </Row>
-            
+
             <Card title="ลูกค้าล่าสุด" style={{ marginBottom: '24px' }}>
-              <Table 
-                dataSource={myCustomers} 
+              <Table
+                dataSource={myCustomers}
                 columns={customerColumns}
                 pagination={false}
                 size="small"
@@ -262,8 +252,8 @@ const AgentDashboard = () => {
       case 'customers':
         return (
           <Card title="ลูกค้าของฉัน">
-            <Table 
-              dataSource={myCustomers} 
+            <Table
+              dataSource={myCustomers}
               columns={customerColumns}
               loading={customersLoading}
               pagination={{
@@ -281,12 +271,12 @@ const AgentDashboard = () => {
         );
       case 'profile':
         return (
-          <Card 
+          <Card
             title="ข้อมูลส่วนตัว"
             extra={
               !isEditingProfile && (
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   icon={<EditOutlined />}
                   onClick={handleEditProfile}
                 >
@@ -357,7 +347,7 @@ const AgentDashboard = () => {
                     </Form.Item>
                   </Col>
                 </Row>
-                
+
                 <Row gutter={16}>
                   <Col span={12}>
                     <Form.Item
@@ -380,7 +370,7 @@ const AgentDashboard = () => {
                     </Form.Item>
                   </Col>
                 </Row>
-                
+
                 <Form.Item
                   name="phone"
                   label="เบอร์โทร (สามารถแก้ไขได้)"
@@ -390,15 +380,15 @@ const AgentDashboard = () => {
                 >
                   <Input placeholder="081-234-5678" />
                 </Form.Item>
-                
+
                 <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
                   <Space>
                     <Button onClick={handleCancelEdit}>
                       ยกเลิก
                     </Button>
-                    <Button 
-                      type="primary" 
-                      htmlType="submit" 
+                    <Button
+                      type="primary"
+                      htmlType="submit"
                       icon={<SaveOutlined />}
                       loading={loading}
                     >
@@ -418,17 +408,17 @@ const AgentDashboard = () => {
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider trigger={null} collapsible collapsed={collapsed}>
-        <div style={{ 
-          height: '64px', 
-          padding: '16px', 
+        <div style={{
+          height: '64px',
+          padding: '16px',
           background: 'rgba(255, 255, 255, 0.1)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: collapsed ? 'center' : 'flex-start',
           gap: collapsed ? 0 : 10
         }}>
-          <img 
-            src="/sena-logo.png" 
+          <img
+            src="/sena-logo.png"
             alt="SENA"
             style={{ width: collapsed ? 28 : 28, height: 28, objectFit: 'contain', borderRadius: 4 }}
           />
@@ -444,10 +434,10 @@ const AgentDashboard = () => {
           onSelect={({ key }) => setSelectedMenu(key)}
         />
       </Sider>
-      
+
       <Layout>
-        <Header style={{ 
-          padding: '0 24px', 
+        <Header style={{
+          padding: '0 24px',
           background: '#fff',
           display: 'flex',
           justifyContent: 'space-between',
@@ -462,12 +452,12 @@ const AgentDashboard = () => {
               style={{ fontSize: '16px', width: 64, height: 64 }}
             />
           </Space>
-          
+
           <Space size="middle">
             <Badge count={0}>
               <Button type="text" icon={<BellOutlined />} size="large" />
             </Badge>
-            
+
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
               <Space style={{ cursor: 'pointer' }}>
                 <Avatar icon={<UserOutlined />} />
@@ -481,9 +471,9 @@ const AgentDashboard = () => {
             </Dropdown>
           </Space>
         </Header>
-        
-        <Content style={{ 
-          margin: '24px', 
+
+        <Content style={{
+          margin: '24px',
           padding: '24px',
           background: '#fff',
           borderRadius: '8px',
