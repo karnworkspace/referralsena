@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Layout,
   Menu,
@@ -179,37 +179,114 @@ const Dashboard = () => {
 
             <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
               <Col xs={24} lg={12}>
-                <TrendLineChart data={dashboardStats} title="แนวโน้มรายเดือน" />
+                <div style={{ position: 'relative' }}>
+                  <TrendLineChart data={dashboardStats} title="แนวโน้มรายเดือน" />
+                  <div style={{
+                    position: 'absolute',
+                    top: '16px',
+                    right: '16px',
+                    background: 'linear-gradient(135deg, #FFA726 0%, #F57C00 100%)',
+                    color: 'white',
+                    padding: '4px 12px',
+                    borderRadius: '12px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    boxShadow: '0 2px 8px rgba(255, 167, 38, 0.3)',
+                    zIndex: 10
+                  }}>
+                    Mockup Data
+                  </div>
+                </div>
               </Col>
               <Col xs={24} lg={12}>
-                <PerformanceAreaChart data={dashboardStats} title="ผลงานรายสัปดาห์" />
+                <div style={{ position: 'relative' }}>
+                  <PerformanceAreaChart data={dashboardStats} title="ผลงานรายสัปดาห์" />
+                  <div style={{
+                    position: 'absolute',
+                    top: '16px',
+                    right: '16px',
+                    background: 'linear-gradient(135deg, #FFA726 0%, #F57C00 100%)',
+                    color: 'white',
+                    padding: '4px 12px',
+                    borderRadius: '12px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    boxShadow: '0 2px 8px rgba(255, 167, 38, 0.3)',
+                    zIndex: 10
+                  }}>
+                    Mockup Data
+                  </div>
+                </div>
               </Col>
             </Row>
 
-            {/* Statistics Cards */}
+            {/* Statistics Cards - SENA Brand Gradient Style */}
             <Spin spinning={statsLoading}>
               <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
                 <Col xs={24} sm={12} lg={6}>
-                  <Card>
+                  <Card
+                    style={{
+                      background: 'linear-gradient(135deg, #00BCD4 0%, #0097A7 100%)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 12px rgba(0, 188, 212, 0.2)',
+                      transition: 'all 0.3s ease'
+                    }}
+                    styles={{ body: { padding: '24px' } }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 188, 212, 0.3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 188, 212, 0.2)';
+                    }}
+                  >
                     <Statistic
-                      title="เอเจนต์ทั้งหมด"
+                      title={<span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: 500 }}>เอเจนต์ทั้งหมด</span>}
                       value={dashboardStats.totalAgents}
-                      valueStyle={{ color: '#3f8600' }}
+                      valueStyle={{ color: '#fff', fontSize: '32px', fontWeight: 600 }}
+                      prefix={<TeamOutlined style={{ fontSize: '24px', color: 'rgba(255,255,255,0.8)' }} />}
                     />
                   </Card>
                 </Col>
                 <Col xs={24} sm={12} lg={6}>
-                  <Card>
+                  <Card
+                    style={{
+                      background: 'linear-gradient(135deg, #FFA726 0%, #F57C00 100%)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 12px rgba(255, 167, 38, 0.2)',
+                      transition: 'all 0.3s ease'
+                    }}
+                    styles={{ body: { padding: '24px' } }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(255, 167, 38, 0.3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 167, 38, 0.2)';
+                    }}
+                  >
                     <Statistic
-                      title="เอเจนต์รออนุมัติ"
+                      title={<span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: 500 }}>เอเจนต์รออนุมัติ</span>}
                       value={dashboardStats.pendingAgents}
-                      valueStyle={{ color: '#fa8c16' }}
+                      valueStyle={{ color: '#fff', fontSize: '32px', fontWeight: 600 }}
+                      prefix={<ClockCircleOutlined style={{ fontSize: '24px', color: 'rgba(255,255,255,0.8)' }} />}
                     />
-                    <div style={{ marginTop: '8px' }}>
+                    <div style={{ marginTop: '12px' }}>
                       <Button
-                        type="link"
+                        type="text"
                         size="small"
                         onClick={() => setSelectedMenu('agents')}
+                        style={{
+                          color: '#fff',
+                          padding: 0,
+                          height: 'auto',
+                          fontWeight: 500,
+                          fontSize: '13px'
+                        }}
                       >
                         ดูรายละเอียด →
                       </Button>
@@ -217,26 +294,69 @@ const Dashboard = () => {
                   </Card>
                 </Col>
                 <Col xs={24} sm={12} lg={6}>
-                  <Card>
+                  <Card
+                    style={{
+                      background: 'linear-gradient(135deg, #52c41a 0%, #389e0d 100%)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 12px rgba(82, 196, 26, 0.2)',
+                      transition: 'all 0.3s ease'
+                    }}
+                    styles={{ body: { padding: '24px' } }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(82, 196, 26, 0.3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(82, 196, 26, 0.2)';
+                    }}
+                  >
                     <Statistic
-                      title="เอเจนต์ที่อนุมัติแล้ว"
+                      title={<span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: 500 }}>เอเจนต์ที่อนุมัติแล้ว</span>}
                       value={dashboardStats.activeAgents}
-                      valueStyle={{ color: '#52c41a' }}
+                      valueStyle={{ color: '#fff', fontSize: '32px', fontWeight: 600 }}
+                      prefix={<UserOutlined style={{ fontSize: '24px', color: 'rgba(255,255,255,0.8)' }} />}
                     />
                   </Card>
                 </Col>
                 <Col xs={24} sm={12} lg={6}>
-                  <Card>
+                  <Card
+                    style={{
+                      background: 'linear-gradient(135deg, #722ed1 0%, #531dab 100%)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      boxShadow: '0 4px 12px rgba(114, 46, 209, 0.2)',
+                      transition: 'all 0.3s ease'
+                    }}
+                    styles={{ body: { padding: '24px' } }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(114, 46, 209, 0.3)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(114, 46, 209, 0.2)';
+                    }}
+                  >
                     <Statistic
-                      title="ลูกค้าทั้งหมด"
+                      title={<span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: 500 }}>ลูกค้าทั้งหมด</span>}
                       value={dashboardStats.totalCustomers}
-                      valueStyle={{ color: '#1890ff' }}
+                      valueStyle={{ color: '#fff', fontSize: '32px', fontWeight: 600 }}
+                      prefix={<UsergroupAddOutlined style={{ fontSize: '24px', color: 'rgba(255,255,255,0.8)' }} />}
                     />
-                    <div style={{ marginTop: '8px' }}>
+                    <div style={{ marginTop: '12px' }}>
                       <Button
-                        type="link"
+                        type="text"
                         size="small"
                         onClick={() => setSelectedMenu('customers')}
+                        style={{
+                          color: '#fff',
+                          padding: 0,
+                          height: 'auto',
+                          fontWeight: 500,
+                          fontSize: '13px'
+                        }}
                       >
                         ดูรายละเอียด →
                       </Button>
@@ -357,23 +477,46 @@ const Dashboard = () => {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider trigger={null} collapsible collapsed={collapsed}>
-        <div style={{ 
-          height: '64px', 
-          padding: '16px', 
-          background: 'rgba(255, 255, 255, 0.1)',
+      <Sider
+        trigger={null}
+        collapsible
+        collapsed={collapsed}
+        style={{
+          background: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)',
+          boxShadow: '2px 0 8px rgba(0,0,0,0.15)'
+        }}
+      >
+        <div style={{
+          height: '64px',
+          padding: '16px',
+          background: 'linear-gradient(135deg, #00BCD4 0%, #0097A7 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: collapsed ? 'center' : 'flex-start',
-          gap: collapsed ? 0 : 10
+          gap: collapsed ? 0 : 10,
+          boxShadow: '0 2px 8px rgba(0, 188, 212, 0.3)',
+          borderBottom: '1px solid rgba(255,255,255,0.1)'
         }}>
-          <img 
-            src="/sena-logo.png" 
+          <img
+            src="/sena-logo.png"
             alt="SENA"
-            style={{ width: collapsed ? 28 : 28, height: 28, objectFit: 'contain', borderRadius: 4 }}
+            style={{
+              width: collapsed ? 32 : 32,
+              height: 32,
+              objectFit: 'contain',
+              transition: 'all 0.3s ease'
+            }}
           />
           {!collapsed && (
-            <Title level={4} style={{ color: 'white', margin: 0 }}>SENA Agent</Title>
+            <Title level={4} style={{
+              color: 'white',
+              margin: 0,
+              fontSize: '18px',
+              fontWeight: 600,
+              textShadow: '0 2px 4px rgba(0,0,0,0.2)'
+            }}>
+              SENA Agent
+            </Title>
           )}
         </div>
         <Menu
@@ -382,38 +525,118 @@ const Dashboard = () => {
           selectedKeys={[selectedMenu]}
           items={menuItems}
           onSelect={({ key }) => setSelectedMenu(key)}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            marginTop: '8px'
+          }}
+          styles={{
+            item: {
+              color: 'rgba(255,255,255,0.85)',
+              fontSize: '15px',
+              fontWeight: 500,
+              margin: '4px 8px',
+              borderRadius: '8px',
+              transition: 'all 0.3s ease',
+            }
+          }}
+          className="sena-sidebar-menu"
         />
       </Sider>
       
       <Layout>
-        <Header style={{ 
-          padding: '0 24px', 
+        <Header style={{
+          padding: '0 24px',
           background: '#fff',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          boxShadow: '0 1px 4px rgba(0,21,41,.08)'
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          borderBottom: '1px solid #f0f0f0'
         }}>
           <Space>
             <Button
               type="text"
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
               onClick={() => setCollapsed(!collapsed)}
-              style={{ fontSize: '16px', width: 64, height: 64 }}
+              style={{
+                fontSize: '16px',
+                width: 64,
+                height: 64,
+                color: '#00BCD4',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(0, 188, 212, 0.1)';
+                e.currentTarget.style.color = '#0097A7';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = '#00BCD4';
+              }}
             />
           </Space>
-          
-          <Space size="middle">
-            <Badge count={5}>
-              <Button type="text" icon={<BellOutlined />} size="large" />
+
+          <Space size="large">
+            <Badge
+              count={5}
+              style={{
+                background: 'linear-gradient(135deg, #FFA726 0%, #F57C00 100%)',
+                boxShadow: '0 2px 8px rgba(255, 167, 38, 0.3)'
+              }}
+            >
+              <Button
+                type="text"
+                icon={<BellOutlined />}
+                size="large"
+                style={{
+                  fontSize: '20px',
+                  color: '#666',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 188, 212, 0.1)';
+                  e.currentTarget.style.color = '#00BCD4';
+                  e.currentTarget.style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = '#666';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              />
             </Badge>
-            
+
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-              <Space style={{ cursor: 'pointer' }}>
-                <Avatar icon={<UserOutlined />} />
+              <Space
+                style={{
+                  cursor: 'pointer',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  transition: 'all 0.3s ease',
+                  border: '1px solid transparent'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 188, 212, 0.05)';
+                  e.currentTarget.style.borderColor = '#00BCD4';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = 'transparent';
+                }}
+              >
+                <Avatar
+                  icon={<UserOutlined />}
+                  style={{
+                    background: 'linear-gradient(135deg, #00BCD4 0%, #0097A7 100%)',
+                    boxShadow: '0 2px 8px rgba(0, 188, 212, 0.3)'
+                  }}
+                />
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                  <Text strong>{user?.email}</Text>
-                  <Text type="secondary" style={{ fontSize: '12px' }}>
+                  <Text strong style={{ color: '#2c3e50', fontSize: '14px' }}>
+                    {user?.email}
+                  </Text>
+                  <Text style={{ fontSize: '12px', color: '#7f8c8d' }}>
                     {user?.role === 'admin' ? 'ผู้ดูแลระบบ' : 'เอเจนต์'}
                   </Text>
                 </div>

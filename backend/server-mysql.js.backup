@@ -455,15 +455,13 @@ app.get('/api/agents', checkAuth, async (req, res) => {
       whereCondition.status = status;
     }
 
-    // Search by name, agent code, or email
+    // Search by name or agent code
     if (search) {
       const { Op } = require('sequelize');
       whereCondition[Op.or] = [
         { firstName: { [Op.like]: `%${search}%` } },
         { lastName: { [Op.like]: `%${search}%` } },
-        { agentCode: { [Op.like]: `%${search}%` } },
-        // Search in associated User table for email
-        { '$User.email$': { [Op.like]: `%${search}%` } }
+        { agentCode: { [Op.like]: `%${search}%` } }
       ];
     }
 
@@ -660,7 +658,7 @@ app.get('/api/agents/:id', checkAuth, async (req, res) => {
 // POST /api/agents - Create new agent (for admin use)
 app.post('/api/agents', checkAuth, async (req, res) => {
   try {
-    const { email, firstName, lastName, phone, idCard, status } = req.body;
+const { email, firstName, lastName, phone, idCard, status } = req.body;
     // Set password as ID card number if not provided
     const password = idCard;
 
@@ -722,7 +720,7 @@ app.post('/api/agents', checkAuth, async (req, res) => {
       lastName,
       phone: phone || '',
       registrationDate: new Date(),
-      status: status || 'inactive'  // Use status from request, default to 'inactive' for approval workflow
+      status: 'activestatus: status || 'inactive'  // Use status from request, default to 'inactive' for approval workflow'
     });
 
     // Get agent with user info

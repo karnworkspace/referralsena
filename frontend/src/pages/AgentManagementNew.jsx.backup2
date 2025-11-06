@@ -206,7 +206,8 @@ const AgentManagementNew = () => {
     }
   };
 
-const handleShowDetail = (agent, event) => {
+  // Handle agent detail modal
+  const handleShowDetail = (agent, event) => {
     console.log('handleShowDetail called with agent:', agent);
     console.log('Event:', event);
 
@@ -221,11 +222,7 @@ const handleShowDetail = (agent, event) => {
         return;
       }
 
-      // Get full agent object with User data from agents array
-      const fullAgent = agents.find(a => a.id === agent.id) || agent;
-      console.log('✅ fullAgent with User:', fullAgent);
-      
-      setSelectedAgent(fullAgent);
+      setSelectedAgent(agent);
       setIsDetailModalVisible(true);
     } catch (error) {
       console.error('Error in handleShowDetail:', error);
@@ -693,8 +690,8 @@ const handleShowDetail = (agent, event) => {
             <div style={{ marginBottom: '16px' }}>
               <Text strong>อีเมล:</Text>
               <br />
-<Text style={{ fontSize: '16px' }}>{selectedAgent.User?.email || selectedAgent.email || '-'}</Text>
-</div>
+              <Text style={{ fontSize: '16px' }}>{selectedAgent.email}</Text>
+            </div>
 
             <div style={{ marginBottom: '16px' }}>
               <Text strong>เบอร์โทร:</Text>

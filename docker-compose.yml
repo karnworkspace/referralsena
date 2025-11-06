@@ -7,7 +7,6 @@ services:
     container_name: sena_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: sena_referral
       MYSQL_USER: sena_user
       MYSQL_PASSWORD: sena_password
@@ -66,9 +65,6 @@ services:
     environment:
       PMA_HOST: mysql
       PMA_PORT: 3306
-      PMA_USER: sena_user
-      PMA_PASSWORD: sena_password
-      MYSQL_ROOT_PASSWORD: rootpassword
       UPLOAD_LIMIT: 100M
     ports:
       - "8080:80"

@@ -269,11 +269,8 @@ const AgentManagement = () => {
 
   // Handle view agent details
   const handleView = (agent) => {
-    console.log('🔍 handleView called with:', agent);
-    console.log('📋 agents array:', agents);
     // Ensure we have the full agent object with User data from the agents array
     const fullAgent = agents.find(a => a.id === agent.id) || agent;
-    console.log('✅ fullAgent:', fullAgent);
     setViewingAgent(fullAgent);
     setIsViewModalVisible(true);
   };
