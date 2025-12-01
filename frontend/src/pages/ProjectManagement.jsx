@@ -126,13 +126,6 @@ const ProjectManagement = () => {
       }
     },
     {
-      title: 'ทีมขาย',
-      dataIndex: 'salesTeam',
-      key: 'salesTeam',
-      width: 100,
-      render: (text) => text || '-'
-    },
-    {
       title: 'สถานะ',
       dataIndex: 'status',
       key: 'status',

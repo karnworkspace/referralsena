@@ -58,7 +58,14 @@ const StatisticsBarChart = ({ data, title = "สถิติรวม" }) => {
   };
 
   return (
-    <Card title={title} style={{ height: '280px' }}>
+    <Card
+      title={<span style={{ fontSize: '16px', fontWeight: 600, color: '#2c3e50' }}>{title}</span>}
+      style={{
+        height: '280px',
+        borderRadius: '12px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+      }}
+    >
       <ResponsiveContainer width="100%" height={200}>
         <BarChart
           data={chartData}
@@ -70,36 +77,50 @@ const StatisticsBarChart = ({ data, title = "สถิติรวม" }) => {
           }}
           barCategoryGap="20%"
         >
+          <defs>
+            <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#00BCD4" stopOpacity={0.9}/>
+              <stop offset="100%" stopColor="#0097A7" stopOpacity={0.9}/>
+            </linearGradient>
+            <linearGradient id="colorActive" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#52c41a" stopOpacity={0.9}/>
+              <stop offset="100%" stopColor="#389e0d" stopOpacity={0.9}/>
+            </linearGradient>
+            <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#FFA726" stopOpacity={0.9}/>
+              <stop offset="100%" stopColor="#F57C00" stopOpacity={0.9}/>
+            </linearGradient>
+          </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis
             dataKey="name"
-            tick={{ fontSize: 14, fill: '#666' }}
-            axisLine={{ stroke: '#d9d9d9' }}
+            tick={{ fontSize: 14, fill: '#666', fontWeight: 500 }}
+            axisLine={{ stroke: '#e0e0e0' }}
           />
           <YAxis
             tick={{ fontSize: 12, fill: '#666' }}
-            axisLine={{ stroke: '#d9d9d9' }}
+            axisLine={{ stroke: '#e0e0e0' }}
           />
           <Tooltip content={<CustomTooltip />} />
           <Legend
-            wrapperStyle={{ paddingTop: '10px' }}
+            wrapperStyle={{ paddingTop: '10px', fontSize: '13px', fontWeight: 500 }}
           />
           <Bar
             dataKey="ทั้งหมด"
-            fill="#1890ff"
-            radius={[2, 2, 0, 0]}
+            fill="url(#colorTotal)"
+            radius={[6, 6, 0, 0]}
             name="ทั้งหมด"
           />
           <Bar
             dataKey="ใช้งาน"
-            fill="#52c41a"
-            radius={[2, 2, 0, 0]}
+            fill="url(#colorActive)"
+            radius={[6, 6, 0, 0]}
             name="ใช้งาน/ใหม่"
           />
           <Bar
             dataKey="รออนุมัติ"
-            fill="#fa8c16"
-            radius={[2, 2, 0, 0]}
+            fill="url(#colorPending)"
+            radius={[6, 6, 0, 0]}
             name="รออนุมัติ"
           />
         </BarChart>

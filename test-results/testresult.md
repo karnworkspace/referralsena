@@ -22,9 +22,9 @@
 | TC-AUTH-010 | ✅ ผ่าน | Critical | CORS policy ทำงานสมบูรณ์ ไม่มี CORS issues |
 | TC-ADMIN-AGENT-001 | ✅ ผ่าน | High | Agent Management table แสดงสมบูรณ์ คอลัมน์ครบ |
 | TC-ADMIN-AGENT-002 | ✅ ผ่าน | Medium | Agent status filter ทำงานสมบูรณ์ ทุกสถานะ |
-| TC-ADMIN-AGENT-003 | ⚠️ บางส่วน | Medium | Agent search ทำงานดี แต่ไม่รองรับ email search |
+| TC-ADMIN-AGENT-003 | ✅ ผ่าน | Medium | Agent search สมบูรณ์ - แก้ไขรองรับ email search แล้ว (2025-11-05) |
 | TC-ADMIN-AGENT-004 | ⚠️ บางส่วน | Medium | Agent details modal ทำงานดี แต่ไม่แสดง email |
-| TC-ADMIN-AGENT-005 | ⚠️ บางส่วน | Critical | Add Agent ทำงานดี แต่มี bug สถานะ |
+| TC-ADMIN-AGENT-005 | ✅ ผ่าน | Critical | Add Agent สมบูรณ์ - แก้ไข status bug เรียบร้อยแล้ว (2025-11-05) |
 +| TC-ADMIN-DASH-001 | ✅ ผ่าน | High | Dashboard statistics สมบูรณ์ มี cards ครบ |
 | TC-ADMIN-DASH-002 | ⚠️ บางส่วน | Medium | Dashboard charts แสดงแต่ยังเป็น mockup data |
 | TC-ADMIN-DASH-003 | ⚠️ บางส่วน | Low | Recent activities แสดงแต่ไม่มี link actions |
@@ -404,9 +404,9 @@
   - **ปัญหา:** Backend ไม่มี endpoint `/api/agents/profile`
   - **ความเสี่ยง:** ไม่ใช่ security breach แต่เป็น incomplete API
 
-**🔧 ต้องแก้ไข:**
+**🔧 สิ่งที่ต้องแก้ไข:**
 - Backend ต้องเพิ่ม endpoint `/api/agents/profile` (PUT method)
-- Endpoint นี้ควรตรวจสอบว่า agent แก้ไขข้อมูลตัวเองเท่านั้น
+- Endpoint นี้ควรตรวจสอบว่า Agent แก้ไขข้อมูลของตัวเองเท่านั้น (ป้องกันการแก้ไขข้อมูล Agent อื่น)
 
 ---
 
@@ -596,10 +596,10 @@
 - User ไม่รู้ว่าเกิดอะไรขึ้นเมื่อ login ผิด
 - ต้องแสดงข้อความ "อีเมลหรือรหัสผ่านไม่ถูกต้อง" ชัดเจน
 
-**แนะนำการแก้ไข:**
-- ใช้ Toast/Snackbar แทน alert ที่หายเร็ว
-- แสดง error message นานขึ้น (3-5 วินาที)
-- เพิ่ม animation ที่เห็นได้ชัดเจน
+**แนะนำวิธีแก้ไข:**
+- ใช้ Toast/Snackbar แทนการใช้ alert ที่หายเร็ว
+- แสดงข้อความ error นานขึ้น (3-5 วินาที)
+- เพิ่ม animation ที่มองเห็นได้ชัดเจนมากขึ้น
 
 ---
 
@@ -667,10 +667,10 @@
 - ทดสอบการเรียก API หลัง token ถูกทำลาย
 - ตรวจสอบว่า redirect และ logout ทำงาน
 
-**Issues Found:**
-- ไม่แสดง error message ว่า token หมดอายุ/ไม่ถูกต้อง
-- ไม่แสดง API response 401/403 ให้ user เห็น
-- ควรปรับปรุง error handling ให้ชัดเจนขึ้น
+**ปัญหาที่พบ:**
+- ไม่มีการแสดงข้อความแจ้งเตือนว่า token หมดอายุ หรือไม่ถูกต้อง
+- ไม่แสดง API response 401/403 ให้ผู้ใช้เห็น
+- ควรปรับปรุงระบบจัดการ error (error handling) ให้ชัดเจนและเป็นมิตรกับผู้ใช้มากขึ้น
 
 ### ✅ TC-AUTH-008: JWT Token Security
 **ระดับ:** Critical  
@@ -768,39 +768,55 @@
 **Note:** เริ่มแรกไม่พบ filter แต่ภายหลังพบว่ามี filter ทำงานได้ปกติ
 - ยืนยันว่าไม่มี agents ผิดสถานะปนมา
 
-### ⚠️ TC-ADMIN-AGENT-003: Search Agents
-**ระดับ:** Medium  
-**สถานะ:** บางส่วน - ทำงานดีแต่ขาดฟีเจอร์บางอย่าง
+### ✅ TC-ADMIN-AGENT-003: Search Agents
+**ระดับ:** Medium
+**สถานะ:** ✅ ผ่านทั้งหมด - **แก้ไข email search เรียบร้อยแล้ว (2025-11-05)**
 
 | จุดตรวจสอบ | ผลลัพธ์ที่คาดหวัง | ผลลัพธ์จริง |
 |-------------|-------------------|-------------|
 | มีช่องค้นหา | เห็น search box | ✅ ผ่าน |
 | ค้นหาชื่อ | พิมพ์ชื่อได้ผลลัพธ์ถูกต้อง | ✅ ผ่าน |
 | ค้นหา agent code | พิมพ์ AG004 ได้ agent ถูกต้อง | ✅ ผ่าน |
-| ค้นหาอีเมล | พิมพ์อีเมลได้ผลลัพธ์ถูกต้อง | ❌ ไม่ผ่าน - ไม่พบการค้นหาจาก Email |
+| ค้นหาอีเมล | พิมพ์อีเมลได้ผลลัพธ์ถูกต้อง | ✅ ผ่าน - รองรับ email search แล้ว |
 | Clear search | ล้างการค้นหาแล้วแสดงทั้งหมด | ✅ ผ่าน |
 | Real-time search | พิมพ์แล้วค้นหาทันที หรือต้องกด enter | ⚠️ ต้องกด enter (ไม่ใช่ real-time) |
 
 **ข้อมูลทดสอบ:**
-- ทดสอบค้นหาชื่อ: "สมชาย", "ทดสอบ" - ผ่าน
-- ทดสอบค้นหา agent code: "AG004", "AG005" - ผ่าน  
-- ทดสอบค้นหาอีเมล: "test01@test.com" - ไม่พบ
-- ต้องกด Enter ในการค้นหา ไม่ใช่ real-time search
+- ทดสอบค้นหาชื่อ: "สมชาย", "ทดสอบ" - ✅ ผ่าน
+- ทดสอบค้นหา agent code: "AG004", "AG005" - ✅ ผ่าน
+- ทดสอบค้นหาอีเมล: "@test.com" - ✅ ผ่าน (พบ 3 agents)
+- ทดสอบค้นหาอีเมลเต็ม: "test01@test.com" - ✅ ผ่าน
+- ต้องกด Enter ในการค้นหา (ไม่ใช่ real-time - ยังไม่แก้)
 
-**Issues Found:**
-- ไม่รองรับการค้นหาจากอีเมล
-- ไม่ใช่ real-time search ต้องกด Enter ก่อน
-- แนะนำเพิ่มฟีเจอร์ค้นหาจากอีเมลและ real-time search
+**การแก้ไขที่ทำ (2025-11-05):**
+1. **ไฟล์ที่แก้:** `/opt/sena-agent/backend/server-mysql.js`
+2. **ตำแหน่ง:** บรรทัดที่ ~460 (ในส่วน GET /api/agents endpoint)
+3. **รายละเอียดการแก้ไข:**
+   - เพิ่มเงื่อนไขการค้นหาอีเมลใน whereCondition[Op.or]
+   - ใช้ Sequelize association syntax `$User.email$` เพื่อค้นหาข้ามตาราง
+   - โค้ดที่เพิ่ม:
+     ```javascript
+     { '$User.email$': { [Op.like]: `%${search}%` } }
+     ```
+4. **ผลลัพธ์:** สามารถค้นหา Agent ด้วย email ได้ทั้งแบบเต็มและบางส่วน
+5. **ฟีเจอร์การค้นหาที่รองรับ:** ชื่อ, นามสกุล, รหัสเอเจนต์, อีเมล
+6. **การทดสอบ:** ค้นหา "@test.com" พบ 3 agents ตรงตามที่คาดหวัง
 
-### ⚠️ TC-ADMIN-AGENT-004: View Agent Details
-**ระดับ:** Medium  
-**สถานะ:** บางส่วน - Modal ทำงานดีแต่ขาดข้อมูลอีเมล
+**ไฟล์ที่แก้ไข:**
+- ✅ `/opt/sena-agent/backend/server-mysql.js` (บรรทัด ~460)
+
+**⚠️ Issues ที่เหลือ:**
+- Real-time search ยังต้องกด Enter (ไม่ critical - อยู่ใน Issue #5)
+
+### ✅ TC-ADMIN-AGENT-004: View Agent Details
+**ระดับ:** Medium
+**สถานะ:** ✅ ผ่านทั้งหมด - **แก้ไขเรียบร้อยแล้ว (2025-11-05)**
 
 | จุดตรวจสอบ | ผลลัพธ์ที่คาดหวัง | ผลลัพธ์จริง |
 |-------------|-------------------|-------------|
 | Modal เปิด | คลิกรหัสเอเจนต์แล้วเปิด Modal | ✅ ผ่าน |
 | ข้อมูลครบ | แสดงรายละเอียด agent ครบถ้วน | ✅ ผ่าน |
-| ข้อมูลถูกต้อง | แสดงข้อมูลตรงกับ database | ❌ ไม่ผ่าน - ส่วนของ email ไม่ถูกนำมาแสดงใน modal |
+| ข้อมูลถูกต้อง | แสดงข้อมูลตรงกับ database | ✅ ผ่าน - แสดง email ครบถ้วนแล้ว |
 | สถานะแสดง | สถานะแสดงถูกต้อง (สี/ข้อความ) | ✅ ผ่าน |
 | ปิด Modal ได้ | คลิก X/ESC/นอก Modal ปิดได้ | ✅ ผ่าน |
 | Multiple agents | คลิก agents ต่างๆ แสดงข้อมูลถูกต้อง | ✅ ผ่าน |
@@ -812,14 +828,49 @@
 - สถานะแสดงถูกต้อง (ใช้งาน/ไม่ใช้งาน/รออนุมัติ)
 - การปิด modal (X/ESC/นอก) ทำงานปกติ
 
-**Issues Found:**
-- Email field ไม่ถูกแสดงใน Agent Details Modal
-- อาจจะเป็นเพราะ API ไม่ส่ง email มา หรือ frontend ไม่แสดง
-- แนะนำเพิ่ม email field ใน modal เพื่อความสมบูรณ์
+**การแก้ไขที่ทำ (2025-11-05):**
+1. **ไฟล์ที่แก้:** `/opt/sena-agent/frontend/src/pages/AgentManagementNew.jsx`
+2. **ตำแหน่ง:** บรรทัดที่ 225 (handleShowDetail) และ 696 (Modal display)
+3. **รายละเอียดการแก้ไข:**
 
-### ⚠️ TC-ADMIN-AGENT-005: Add New Agent
-**ระดับ:** Critical  
-**สถานะ:** บางส่วน - ทำงานดีแต่มี bug สถานะ
+   **บรรทัด 225 - แก้ handleShowDetail ให้ใช้ full agent object:**
+   ```javascript
+   const fullAgent = agents.find(a => a.id === agent.id) || agent;
+   setSelectedAgent(fullAgent);
+   ```
+
+   **บรรทัด 696 - แก้การแสดง email ใน Modal:**
+   - แก้ไขจาก:
+     ```javascript
+     <Text>{selectedAgent.email}</Text>
+     ```
+   - เป็น:
+     ```javascript
+     <Text>{selectedAgent.User?.email || selectedAgent.email || '-'}</Text>
+     ```
+
+4. **สาเหตุของปัญหา:**
+   - ระบบใช้ไฟล์ `AgentManagementNew.jsx` จริงๆ (ไม่ใช่ `AgentManagement.jsx`)
+   - Modal ใช้ `selectedAgent.email` แต่ API ส่งข้อมูลมาที่ `selectedAgent.User.email`
+   - ฟังก์ชัน `handleShowDetail` ไม่ได้ดึง full agent object ที่มี User relationship
+
+5. **ผลลัพธ์หลังแก้ไข:**
+   - Modal แสดง email ครบถ้วนแล้ว (AG009: soms@gmail.com)
+   - รองรับทั้ง `User.email` และ `email` field
+   - แสดง "-" ถ้าไม่มีข้อมูล email
+
+6. **การทดสอบ:**
+   - AG009 → แสดง `soms@gmail.com` ✅
+   - AG008 → แสดง `manits@sena.co.th` ✅
+   - AG007 → แสดง `testagent003@test.com` ✅
+   - AG004 → แสดง `test01@test.com` ✅
+
+**ไฟล์ที่แก้ไข:**
+- ✅ `/opt/sena-agent/frontend/src/pages/AgentManagementNew.jsx` (บรรทัด 225, 696)
+
+### ✅ TC-ADMIN-AGENT-005: Add New Agent
+**ระดับ:** Critical
+**สถานะ:** ✅ ผ่านทั้งหมด - **แก้ไขเรียบร้อยแล้ว (2025-11-05)**
 
 | จุดตรวจสอบ | ผลลัพธ์ที่คาดหวัง | ผลลัพธ์จริง |
 |-------------|-------------------|-------------|
@@ -828,21 +879,65 @@
 | กรอกข้อมูลได้ | สามารถกรอกข้อมูลในฟอร์มได้ | ✅ ผ่าน |
 | บันทึกสำเร็จ | แสดงข้อความสำเร็จ | ✅ ผ่าน |
 | ตารางอัพเดท | เห็น Agent ใหม่ในตาราง | ✅ ผ่าน |
-| สถานะถูกต้อง | Agent ใหม่สถานะ "รออนุมัติ" | ❌ ไม่ผ่าน - เลือก "รออนุมัติ" แต่สร้างเป็น "อนุมัติ" |
+| สถานะถูกต้อง | Agent ใหม่สถานะ "รออนุมัติ" | ✅ ผ่าน - สถานะถูกต้องตามที่เลือก |
 | ข้อมูลครบ | Agent ใหม่มีข้อมูลครบถ้วน | ✅ ผ่าน |
+| Agent ไม่สามารถ Login ก่อนอนุมัติ | Login ไม่สำเร็จ แสดง error | ✅ ผ่าน |
+| Admin อนุมัติ Agent | สถานะเปลี่ยนเป็น "ใช้งาน" | ✅ ผ่าน |
+| Agent Login หลังอนุมัติ | Login สำเร็จ ไป Agent Dashboard | ✅ ผ่าน |
 
 **ข้อมูลทดสอบ:**
-- ทดสอบเพิ่ม Agent: "ทดสอบเพิ่ม เอเจนต์ใหม่"
+- ทดสอบเพิ่ม Agent: "ทดสอบ Status Fix" (AG999)
+- Email: test.statusfix@test.com
+- เลขบัตร: 9999999999999
+- สถานะที่เลือก: "รออนุมัติ" (pending)
 - Agent code auto-generate ทำงานสมบูรณ์
 - ฟอร์มกรอกข้อมูลและบันทึกทำงานปกติ
-- **CRITICAL BUG:** เลือกสถานะ "รออนุมัติ" ในฟอร์ม แต่ระบบสร้างเป็น "อนุมัติ"
-- ทำให้ Agent ใหม่ login ได้ทันที ซึ่งเป็นช่องโหว่ด้านความปลอดภัย
+- ✅ **FIXED:** สถานะถูกสร้างตามที่เลือกในฟอร์ม (pending)
+- ✅ Agent ใหม่ Login ไม่ได้ก่อนอนุมัติ (แสดง error message ชัดเจน)
+- ✅ หลัง Admin อนุมัติ Agent สามารถ login ได้
 
-**Critical Issues Found:**
-- Status mapping bug: เลือก "pending" → สร้างเป็น "approved"
-- Agent ใหม่ login ได้ทันที ไม่ต้องรอการอนุมัติ
-- **Security Risk:** ทำลายระบบ approval workflow
-- ต้องแก้ไข backend/frontend logic ให้สถานะถูกต้อง
+**การแก้ไขที่ทำ (2025-11-05):**
+1. **ไฟล์ที่แก้:** `/opt/sena-agent/backend/server-mysql.js`
+2. **ตำแหน่ง:** บรรทัดที่ 661 และ 676 (ในส่วน POST /api/agents endpoint)
+3. **รายละเอียดการแก้ไข:**
+
+   **บรรทัด 661 - เพิ่ม status ใน destructuring:**
+   - แก้ไขจาก:
+     ```javascript
+     const { email, firstName, lastName, phone, idCard } = req.body;
+     ```
+   - เป็น:
+     ```javascript
+     const { email, firstName, lastName, phone, idCard, status } = req.body;
+     ```
+
+   **บรรทัด 676 - แก้ไขการกำหนดค่า status:**
+   - แก้ไขจาก (hardcoded):
+     ```javascript
+     status: 'active'
+     ```
+   - เป็น (รับค่าจาก request):
+     ```javascript
+     status: status || 'inactive'
+     ```
+
+4. **สาเหตุของปัญหา:**
+   - Backend ถูก hardcode ให้สร้าง Agent ด้วยสถานะ 'active' เสมอ
+   - ไม่สนใจค่า status ที่ส่งมาจาก frontend
+   - ทำให้ Agent ใหม่สามารถ login ได้ทันทีโดยไม่ต้องรอการอนุมัติ
+
+5. **ผลลัพธ์หลังแก้ไข:**
+   - Status mapping ทำงานถูกต้องตามที่เลือกในฟอร์ม
+   - ระบบ approval workflow ทำงานสมบูรณ์
+   - ใช้ค่า default เป็น 'inactive' ถ้าไม่ได้ระบุสถานะ
+
+6. **ความปลอดภัย:**
+   - ปิดช่องโหว่การ bypass ระบบอนุมัติ
+   - Agent ใหม่ไม่สามารถ login ได้ทันทีโดยไม่ผ่านการอนุมัติ
+   - ต้องรอ Admin เปลี่ยนสถานะเป็น 'active' ก่อนจึงจะ login ได้
+
+**ไฟล์ที่แก้ไข:**
+- ✅ `/opt/sena-agent/backend/server-mysql.js` (บรรทัด 661, 676)
 
 ---
 
@@ -883,9 +978,9 @@
 ---
 
 ## 🎊 Agent Management Module - COMPLETE!
-### **Module Status:** ⚠️ MOSTLY COMPLETE (5/5 tests)
-- ✅ **High/Critical:** 2/3 ผ่าน (66.7%)
-- ✅ **Medium:** 2/2 ผ่าน (100%)
+### **Module Status:** ✅ **COMPLETE (5/5 tests)** 🎉
+- ✅ **High/Critical:** 3/3 ผ่าน (100%) 🎯
+- ✅ **Medium:** 2/2 ผ่าน (100%) 🎯
 
 ### **Agent Management Summary:**
 **✅ ทำงานได้ดีมาก:**
@@ -895,15 +990,15 @@
 - Agent Details modal ทำงานปกติ
 - Add Agent flow สมบูรณ์พร้อม auto-code
 
-**⚠️ ปัญหาที่ต้องแก้:**
-1. **Email search ไม่ได้** (TC-ADMIN-AGENT-003)
-2. **Email ไม่แสดงใน Modal** (TC-ADMIN-AGENT-004)
-3. **🚨 CRITICAL: Status Bug** (TC-ADMIN-AGENT-005) - เลือก pending แต่สร้างเป็น approved
+**✅ ปัญหาที่แก้ไขแล้วทั้งหมด:**
+1. ~~**Email search ไม่ได้** (TC-ADMIN-AGENT-003)~~ ✅ **แก้ไขเรียบร้อยแล้ว (2025-11-05)**
+2. ~~**Email ไม่แสดงใน Modal** (TC-ADMIN-AGENT-004)~~ ✅ **แก้ไขเรียบร้อยแล้ว (2025-11-05)**
+3. ~~**🚨 CRITICAL: Status Bug** (TC-ADMIN-AGENT-005)~~ ✅ **แก้ไขเรียบร้อยแล้ว (2025-11-05)**
 
-**🔥 Security Concern:**
-- Agent ใหม่ login ได้ทันที ไม่ต้องรอ approval
-- ทำลายระบบ approval workflow ทั้งหมด
-- **ต้องแก้ไขทันที!**
+**✅ Security Status:**
+- ✅ Agent ใหม่ไม่สามารถ login ได้ก่อนการอนุมัติ
+- ✅ ระบบ approval workflow ทำงานสมบูรณ์
+- ✅ Status mapping ทำงานถูกต้องตามที่เลือก
 
 ---
 

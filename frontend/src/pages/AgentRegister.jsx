@@ -154,20 +154,40 @@ const AgentRegister = () => {
 
   if (registrationSuccess) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      <div style={{
+        minHeight: '100vh',
+        backgroundImage: 'url(/background.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '20px'
+        padding: '20px',
+        position: 'relative'
       }}>
-        <Card 
-          style={{ 
-            width: '100%', 
+        {/* Overlay */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(255, 255, 255, 0.3)',
+          backdropFilter: 'blur(2px)'
+        }} />
+
+        <Card
+          style={{
+            width: '100%',
             maxWidth: '600px',
-            borderRadius: '12px',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
+            borderRadius: '16px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+            border: 'none',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            position: 'relative',
+            zIndex: 1
           }}
         >
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
@@ -251,28 +271,77 @@ const AgentRegister = () => {
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    <div style={{
+      minHeight: '100vh',
+      backgroundImage: 'url(/background.jpg)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px'
+      padding: '20px',
+      position: 'relative'
     }}>
-      <Card 
-        style={{ 
-          width: '100%', 
+      {/* Overlay */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        backdropFilter: 'blur(2px)'
+      }} />
+
+      {/* SENA Logo */}
+      <div style={{
+        position: 'absolute',
+        top: '32px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        textAlign: 'center',
+        zIndex: 2
+      }}>
+        <img
+          src="/sena-logo.png"
+          alt="SENA Logo"
+          style={{
+            height: '60px',
+            filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))'
+          }}
+        />
+      </div>
+
+      <Card
+        style={{
+          width: '100%',
           maxWidth: '600px',
-          borderRadius: '12px',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
+          borderRadius: '16px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+          border: 'none',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          position: 'relative',
+          zIndex: 1
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <TeamOutlined style={{ fontSize: '48px', color: '#1890ff', marginBottom: '16px' }} />
-          <Title level={2} style={{ margin: 0 }}>
+          <TeamOutlined style={{
+            fontSize: '48px',
+            background: 'linear-gradient(135deg, #00BCD4 0%, #0097A7 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            marginBottom: '16px'
+          }} />
+          <Title level={2} style={{
+            margin: 0,
+            color: '#2c3e50',
+            fontWeight: 600
+          }}>
             สมัครเป็นเอเจนต์
           </Title>
-          <Text type="secondary">
+          <Text style={{ color: '#7f8c8d', fontSize: '15px' }}>
             กรอกข้อมูลเพื่อสมัครเป็นเอเจนต์ขาย
           </Text>
         </div>

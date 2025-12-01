@@ -157,20 +157,6 @@ const ProjectForm = ({ onBack, onSave, editingProject }) => {
             </Col>
           </Row>
 
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="salesTeam"
-                label="ทีมขาย"
-              >
-                <Select placeholder="เลือกทีมขาย">
-                  <Option value="Team A">Team A</Option>
-                  <Option value="Team B">Team B</Option>
-                  <Option value="Team C">Team C</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
           <Form.Item>
             <Button type="primary" htmlType="submit">
               {editingProject ? 'อัพเดตโครงการ' : 'บันทึกโครงการ'}

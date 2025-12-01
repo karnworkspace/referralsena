@@ -82,7 +82,15 @@ const AgentDashboard = () => {
 
   const handleUpdateProfile = async (values) => {
     setLoading(true);
-
+    try {
+      const response = await fetch('/api/agents/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(values)
+      });
 
       const data = await response.json();
 
@@ -156,7 +164,7 @@ const AgentDashboard = () => {
     email: customer.email,
     phone: customer.phone,
     status: customer.status,
-    registrationDate: customer.registrationDate
+    registrationDate: customer.createdAt || customer.registrationDate || customer.created_at
   }));
 
   const customerColumns = [
@@ -195,7 +203,20 @@ const AgentDashboard = () => {
       title: 'วันที่ลงทะเบียน',
       dataIndex: 'registrationDate',
       key: 'registrationDate',
-      render: (date) => new Date(date).toLocaleDateString('th-TH')
+      render: (date) => {
+        if (!date) return '-';
+        try {
+          const d = new Date(date);
+          if (isNaN(d.getTime())) return '-';
+          return d.toLocaleDateString('th-TH', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+        } catch (e) {
+          return '-';
+        }
+      }
     }
   ];
 

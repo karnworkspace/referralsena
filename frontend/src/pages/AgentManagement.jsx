@@ -269,7 +269,9 @@ const AgentManagement = () => {
 
   // Handle view agent details
   const handleView = (agent) => {
-    setViewingAgent(agent);
+    // Ensure we have the full agent object with User data from the agents array
+    const fullAgent = agents.find(a => a.id === agent.id) || agent;
+    setViewingAgent(fullAgent);
     setIsViewModalVisible(true);
   };
 
@@ -628,7 +630,7 @@ const AgentManagement = () => {
             </Row>
 
             <Form.Item label="อีเมล">
-              <Typography.Text strong>{viewingAgent.User?.email || '-'}</Typography.Text>
+              <Typography.Text strong>{viewingAgent.User?.email || viewingAgent.email || '-'}</Typography.Text>
             </Form.Item>
 
             <Row gutter={16}>

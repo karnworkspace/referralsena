@@ -128,3 +128,16 @@ README.md
 # Server deployment checklist (contains sensitive server info)
 server-todo.md
 listofwork.md
+
+# Excel database files (sensitive data)
+excel-DB-Clean/
+
+# Analysis and documentation files
+cleansingjob.md
+requirement-analysis.md
+analyze_excel.py
+read_pptx.py
+
+# Project documentation (optional - can be included later)
+PROJECT_MEMORY.md
+USER_GUIDE.md
