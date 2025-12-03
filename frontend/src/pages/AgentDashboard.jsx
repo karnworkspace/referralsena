@@ -16,6 +16,7 @@ import {
   Tag,
   Form,
   Input,
+  Select,
   notification,
   Modal
 } from 'antd';
@@ -30,12 +31,14 @@ import {
   BellOutlined,
   TeamOutlined,
   EditOutlined,
-  SaveOutlined
+  SaveOutlined,
+  UserAddOutlined
 } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser, updateUser } from '../store/authSlice';
 import { fetchCustomers } from '../store/customersSlice';
 import { useNavigate } from 'react-router-dom';
+import { projectsAPI } from '../services/api';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -49,7 +52,10 @@ const AgentDashboard = () => {
   const [selectedMenu, setSelectedMenu] = useState('dashboard');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileForm] = Form.useForm();
+  const [addCustomerForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
 
   // Load agent's customers on component mount
   useEffect(() => {
@@ -62,6 +68,30 @@ const AgentDashboard = () => {
       }));
     }
   }, [dispatch, user?.agentId]);
+
+  // Fetch active projects for dropdown
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setProjectsLoading(true);
+        const response = await projectsAPI.getAll({ limit: 1000 });
+        if (response.data) {
+          // Filter only active projects
+          const activeProjects = response.data.filter(project => project.isActive);
+          setProjects(activeProjects);
+        }
+      } catch (error) {
+        notification.error({
+          message: 'เกิดข้อผิดพลาด',
+          description: 'ไม่สามารถโหลดข้อมูลโครงการได้'
+        });
+      } finally {
+        setProjectsLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   const handleLogout = () => {
     dispatch(logoutUser());
@@ -115,6 +145,75 @@ const AgentDashboard = () => {
     }
   };
 
+  const handleAddCustomer = async (values) => {
+    setLoading(true);
+    try {
+      // Parse budget range
+      let budgetMin = null;
+      let budgetMax = null;
+
+      if (values.budget) {
+        if (values.budget === '20000000+') {
+          budgetMin = 20000000;
+          budgetMax = null;
+        } else {
+          const [min, max] = values.budget.split('-').map(Number);
+          budgetMin = min;
+          budgetMax = max;
+        }
+      }
+
+      const customerData = {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email || null,
+        phone: values.phone,
+        projectId: values.projectId || null,
+        budgetMin,
+        budgetMax,
+        agentId: user.agentId,
+        status: 'pending'
+      };
+
+      const response = await fetch('/api/customers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(customerData)
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        notification.success({
+          message: 'สำเร็จ',
+          description: 'เพิ่มข้อมูลลูกค้าสำเร็จ'
+        });
+        addCustomerForm.resetFields();
+        // Refresh customer list
+        dispatch(fetchCustomers({
+          agentId: user.agentId,
+          status: 'all',
+          page: 1,
+          limit: 100
+        }));
+        // Navigate back to customers list
+        setSelectedMenu('customers');
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (error) {
+      notification.error({
+        message: 'เกิดข้อผิดพลาด',
+        description: error.message || 'ไม่สามารถเพิ่มข้อมูลลูกค้าได้'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const userMenuItems = [
     {
       key: 'profile',
@@ -143,6 +242,11 @@ const AgentDashboard = () => {
       key: 'customers',
       icon: <UsergroupAddOutlined />,
       label: 'ลูกค้าของฉัน',
+    },
+    {
+      key: 'add-customer',
+      icon: <UserAddOutlined />,
+      label: 'เพิ่มข้อมูลลูกค้า',
     },
     {
       key: 'profile',
@@ -308,6 +412,137 @@ const AgentDashboard = () => {
                 emptyText: 'ยังไม่มีลูกค้าที่รับผิดชอบ'
               }}
             />
+          </Card>
+        );
+      case 'add-customer':
+        return (
+          <Card title="เพิ่มข้อมูลลูกค้า">
+            <Form
+              form={addCustomerForm}
+              layout="vertical"
+              onFinish={handleAddCustomer}
+              style={{ maxWidth: '800px' }}
+            >
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    label="รหัสนายหน้า"
+                  >
+                    <Input
+                      value={`${user?.agentCode} - ${user?.firstName} ${user?.lastName}`}
+                      disabled
+                      style={{ backgroundColor: '#f5f5f5', color: '#000' }}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="firstName"
+                    label={<span>ชื่อ <Text type="danger">*</Text></span>}
+                    rules={[{ required: true, message: 'กรุณากรอกชื่อ' }]}
+                  >
+                    <Input placeholder="ชื่อ" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="lastName"
+                    label={<span>นามสกุล <Text type="danger">*</Text></span>}
+                    rules={[{ required: true, message: 'กรุณากรอกนามสกุล' }]}
+                  >
+                    <Input placeholder="นามสกุล" />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="email"
+                    label="Email"
+                    rules={[
+                      { type: 'email', message: 'รูปแบบอีเมลไม่ถูกต้อง' }
+                    ]}
+                  >
+                    <Input placeholder="email@example.com" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="phone"
+                    label={<span>เบอร์โทร <Text type="danger">*</Text></span>}
+                    rules={[
+                      { required: true, message: 'กรุณากรอกเบอร์โทร' },
+                      { pattern: /^[0-9-]+$/, message: 'เบอร์โทรควรเป็นตัวเลขและขีดกลางเท่านั้น' }
+                    ]}
+                  >
+                    <Input placeholder="081-234-5678" />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="projectId"
+                    label="ชื่อโครงการ"
+                  >
+                    <Select
+                      placeholder="เลือกโครงการ"
+                      loading={projectsLoading}
+                      showSearch
+                      optionFilterProp="children"
+                      filterOption={(input, option) =>
+                        option.children.toLowerCase().includes(input.toLowerCase())
+                      }
+                    >
+                      {projects.map(project => (
+                        <Select.Option key={project.id} value={project.id}>
+                          {project.name || project.projectName}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="budget"
+                    label={<span>งบประมาณ <Text type="danger">*</Text></span>}
+                    rules={[{ required: true, message: 'กรุณาเลือกงบประมาณ' }]}
+                  >
+                    <Select placeholder="เลือกงบประมาณ">
+                      <Select.Option value="1000000-3000000">1-3 ล้านบาท</Select.Option>
+                      <Select.Option value="3000000-5000000">3-5 ล้านบาท</Select.Option>
+                      <Select.Option value="5000000-10000000">5-10 ล้านบาท</Select.Option>
+                      <Select.Option value="10000000-20000000">10-20 ล้านบาท</Select.Option>
+                      <Select.Option value="20000000+">20 ล้านบาทขึ้นไป</Select.Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Form.Item style={{ marginTop: '24px' }}>
+                <Space>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading}
+                    style={{
+                      background: 'linear-gradient(135deg, #00BCD4 0%, #0097A7 100%)',
+                      border: 'none'
+                    }}
+                  >
+                    บันทึกข้อมูล
+                  </Button>
+                  <Button onClick={() => addCustomerForm.resetFields()}>
+                    ล้างข้อมูล
+                  </Button>
+                </Space>
+              </Form.Item>
+            </Form>
           </Card>
         );
       case 'profile':
