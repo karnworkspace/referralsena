@@ -193,11 +193,30 @@ const AgentDashboard = () => {
       title: 'สถานะ',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => (
-        <Tag color={status === 'active' ? 'green' : 'red'}>
-          {status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน'}
-        </Tag>
-      )
+      render: (status) => {
+        const statusConfig = {
+          pending: {
+            color: 'orange',
+            text: 'รอดำเนินการตรวจสอบ'
+          },
+          duplicate: {
+            color: 'red',
+            text: 'ผู้ที่ท่านแนะนำ ซ้ำกับรายชื่อของฐานข้อมูลโครงการ'
+          },
+          approved: {
+            color: 'green',
+            text: 'ผู้ถูกแนะนำของท่านผ่านเงื่อนไข'
+          }
+        };
+
+        const config = statusConfig[status] || { color: 'default', text: status };
+
+        return (
+          <Tag color={config.color} style={{ whiteSpace: 'normal', maxWidth: '300px' }}>
+            {config.text}
+          </Tag>
+        );
+      }
     },
     {
       title: 'วันที่ลงทะเบียน',
@@ -238,13 +257,14 @@ const AgentDashboard = () => {
               <Col xs={24} sm={12} lg={8}>
                 <Card>
                   <Statistic
-                    title="ลูกค้าใช้งาน"
-                    value={myCustomers.filter(c => c.status === 'active').length}
+                    title="ผู้ถูกแนะนำที่ผ่านเงื่อนไข"
+                    value={myCustomers.filter(c => c.status === 'approved').length}
                     valueStyle={{ color: '#1890ff' }}
                   />
                 </Card>
               </Col>
-              <Col xs={24} sm={12} lg={8}>
+              {/* Disabled: ยอดขายเดือนนี้ - รอระบบขายเสร็จก่อน */}
+              {/* <Col xs={24} sm={12} lg={8}>
                 <Card>
                   <Statistic
                     title="ยอดขายเดือนนี้"
@@ -253,7 +273,7 @@ const AgentDashboard = () => {
                     valueStyle={{ color: '#cf1322' }}
                   />
                 </Card>
-              </Col>
+              </Col> */}
             </Row>
 
             <Card title="ลูกค้าล่าสุด" style={{ marginBottom: '24px' }}>

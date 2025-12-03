@@ -71,6 +71,14 @@ const AgentManagementNew = () => {
     }));
   }, [dispatch, pagination.current, pagination.pageSize, filters]);
 
+  const handleTableChange = (newPagination) => {
+    dispatch(fetchAgents({
+      page: newPagination.current,
+      limit: newPagination.pageSize,
+      ...filters
+    }));
+  };
+
   const handleSearch = (value) => {
     dispatch(setFilters({ search: value }));
   };
@@ -477,6 +485,7 @@ const AgentManagementNew = () => {
           dataSource={agents}
           rowKey="id"
           loading={loading}
+          onChange={handleTableChange}
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,

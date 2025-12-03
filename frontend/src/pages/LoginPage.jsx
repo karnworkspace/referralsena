@@ -1,6 +1,5 @@
-import { Link } from 'react-router-dom';
-import { Form, Input, Button, Card, Row, Col, Alert, Typography, Divider } from 'antd';
-import { UserOutlined, LockOutlined, TeamOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Card, Row, Col, Alert, Typography } from 'antd';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser, clearError } from '../store/authSlice';
 
@@ -114,6 +113,7 @@ const LoginPage = () => {
                 name="password"
                 label="รหัสผ่าน"
                 rules={[{ required: true, message: 'กรุณาป้อนรหัสผ่าน' }]}
+                extra="เลขบัตรประจำตัวประชาชน"
               >
                 <Input.Password
                   prefix={<LockOutlined />}
@@ -151,54 +151,6 @@ const LoginPage = () => {
                 </Button>
               </Form.Item>
             </Form>
-
-            <Divider style={{ color: '#bdc3c7', margin: '24px 0' }}>หรือ</Divider>
-
-            <div style={{ textAlign: 'center' }}>
-              <Link to="/register-agent">
-                <Button
-                  type="default"
-                  icon={<TeamOutlined />}
-                  block
-                  size="large"
-                  style={{
-                    height: '48px',
-                    fontSize: '16px',
-                    marginBottom: '16px',
-                    borderRadius: '8px',
-                    borderColor: '#00BCD4',
-                    color: '#00BCD4',
-                    fontWeight: 500,
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(0, 188, 212, 0.05)';
-                    e.currentTarget.style.borderColor = '#0097A7';
-                    e.currentTarget.style.color = '#0097A7';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.borderColor = '#00BCD4';
-                    e.currentTarget.style.color = '#00BCD4';
-                  }}
-                >
-                  สมัครเป็นเอเจนต์
-                </Button>
-              </Link>
-            </div>
-
-            <div style={{
-              textAlign: 'center',
-              marginTop: '16px',
-              padding: '12px',
-              background: 'rgba(0, 188, 212, 0.05)',
-              borderRadius: '8px',
-              border: '1px solid rgba(0, 188, 212, 0.1)'
-            }}>
-              <Text style={{ fontSize: '13px', color: '#7f8c8d' }}>
-                🔑 ทดสอบระบบ: <strong style={{ color: '#2c3e50' }}>admin@test.com</strong> / <strong style={{ color: '#2c3e50' }}>password</strong>
-              </Text>
-            </div>
           </Card>
         </Col>
       </Row>

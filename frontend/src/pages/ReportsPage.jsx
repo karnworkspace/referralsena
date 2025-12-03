@@ -39,10 +39,11 @@ const ReportsPage = () => {
   const fetchAllData = async () => {
     try {
       setLoading(true);
+      // Fetch all data with large limit to get everything
       const [agentsRes, customersRes, projectsRes] = await Promise.all([
-        agentsAPI.getAll(),
-        customersAPI.getAll(),
-        projectsAPI.getAll()
+        agentsAPI.getAll({ limit: 10000 }),
+        customersAPI.getAll({ limit: 10000 }),
+        projectsAPI.getAll({ limit: 10000 })
       ]);
 
       if (agentsRes.data) setAgents(agentsRes.data);
@@ -61,8 +62,13 @@ const ReportsPage = () => {
 
   // Prepare agent data with customers and projects
   const agentData = agents.map(agent => {
-    const agentCustomers = customers.filter(c => c.agentId === agent.id);
-    const customerProjects = [...new Set(agentCustomers.map(c => c.projectId).filter(Boolean))];
+    // Support both camelCase (agentId) and snake_case (agent_id) field names
+    const agentCustomers = customers.filter(c =>
+      c.agentId === agent.id || c.agent_id === agent.id
+    );
+    const customerProjects = [...new Set(agentCustomers.map(c =>
+      c.projectId || c.project_id
+    ).filter(Boolean))];
 
     const mappedProjects = customerProjects.map(projectId =>
       projects.find(p => p.id === projectId)
@@ -347,10 +353,10 @@ const ReportsPage = () => {
               onExpandedRowsChange: (keys) => setExpandedRowKeys(keys)
             }}
             pagination={{
-              pageSize: 10,
+              defaultPageSize: 50,
               showTotal: (total) => `ทั้งหมด ${total} รายการ`,
               showSizeChanger: true,
-              pageSizeOptions: ['10', '20', '50']
+              pageSizeOptions: ['10', '20', '50', '100']
             }}
             bordered
           />
