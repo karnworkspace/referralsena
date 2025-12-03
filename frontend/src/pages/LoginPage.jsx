@@ -151,6 +151,37 @@ const LoginPage = () => {
                 </Button>
               </Form.Item>
             </Form>
+
+            {/* Information Banner */}
+            <div style={{
+              marginTop: '24px',
+              padding: '16px 20px',
+              background: 'linear-gradient(135deg, rgba(0, 188, 212, 0.08) 0%, rgba(0, 151, 167, 0.08) 100%)',
+              borderRadius: '12px',
+              border: '1px solid rgba(0, 188, 212, 0.2)',
+              boxShadow: '0 2px 8px rgba(0, 188, 212, 0.1)'
+            }}>
+              <Text strong style={{
+                display: 'block',
+                color: '#00838F',
+                fontSize: '15px',
+                marginBottom: '8px',
+                fontWeight: 600
+              }}>
+                เรียนผู้ใช้งาน
+              </Text>
+              <div style={{ fontSize: '14px', color: '#546e7a', lineHeight: '1.6' }}>
+                <Text style={{ display: 'block', marginBottom: '4px' }}>
+                  • <strong>User</strong> สำหรับเข้าใช้งานระบบ คือ <strong>Email</strong>
+                </Text>
+                <Text style={{ display: 'block', marginBottom: '4px' }}>
+                  • <strong>รหัสผ่าน</strong> คือ <strong>หมายเลขบัตรประจำตัวประชาชน</strong>
+                </Text>
+                <Text style={{ display: 'block' }}>
+                  ที่ได้ลงทะเบียนไว้กับบริษัท
+                </Text>
+              </div>
+            </div>
           </Card>
         </Col>
       </Row>

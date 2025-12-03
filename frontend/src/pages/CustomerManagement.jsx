@@ -50,8 +50,8 @@ const { TextArea } = Input;
 
 const getStatusTag = (status) => {
   const statusMap = {
-    active: { color: 'green', text: 'ใช้งาน' },
-    inactive: { color: 'red', text: 'ไม่ใช้งาน' },
+    approved: { color: 'green', text: 'ใช้งาน' },
+    duplicate: { color: 'red', text: 'ไม่ใช้งาน' },
     pending: { color: 'orange', text: 'รออนุมัติ' }
   };
 
@@ -129,17 +129,18 @@ const CustomerManagement = () => {
 
   // Table columns
   const columns = [
-    {
-      title: 'รหัสลูกค้า',
-      dataIndex: 'customerCode',
-      key: 'customerCode',
-      width: 120,
-      render: (text, record) => (
-        <a onClick={() => handleView(record)}>
-          <Tag color="green" style={{ cursor: 'pointer' }}>{text}</Tag>
-        </a>
-      )
-    },
+    // Hidden: รหัสลูกค้า column - not needed in customer management view
+    // {
+    //   title: 'รหัสลูกค้า',
+    //   dataIndex: 'customerCode',
+    //   key: 'customerCode',
+    //   width: 120,
+    //   render: (text, record) => (
+    //     <a onClick={() => handleView(record)}>
+    //       <Tag color="green" style={{ cursor: 'pointer' }}>{text}</Tag>
+    //     </a>
+    //   )
+    // },
     {
       title: 'ชื่อ-นามสกุล',
       key: 'fullName',
