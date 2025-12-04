@@ -50,8 +50,8 @@ const { TextArea } = Input;
 
 const getStatusTag = (status) => {
   const statusMap = {
-    approved: { color: 'green', text: 'ใช้งาน' },
-    duplicate: { color: 'red', text: 'ไม่ใช้งาน' },
+    approved: { color: 'green', text: 'ผ่าน' },
+    duplicate: { color: 'red', text: 'ไม่ผ่าน' },
     pending: { color: 'orange', text: 'รออนุมัติ' }
   };
 
@@ -522,8 +522,8 @@ const CustomerManagement = () => {
               onChange={handleStatusFilter}
             >
               <Option value="all">ทั้งหมด</Option>
-              <Option value="active">ใช้งาน</Option>
-              <Option value="inactive">ไม่ใช้งาน</Option>
+              <Option value="approved">ผ่าน</Option>
+              <Option value="duplicate">ไม่ผ่าน</Option>
               <Option value="pending">รออนุมัติ</Option>
             </Select>
           </Col>
@@ -642,8 +642,8 @@ const CustomerManagement = () => {
                 rules={[{ required: true, message: 'กรุณาเลือกสถานะ' }]}
               >
                 <Select placeholder="เลือกสถานะ">
-                  <Option value="active">ใช้งาน</Option>
-                  <Option value="inactive">ไม่ใช้งาน</Option>
+                  <Option value="approved">ผ่าน</Option>
+                  <Option value="duplicate">ไม่ผ่าน</Option>
                   <Option value="pending">รออนุมัติ</Option>
                 </Select>
               </Form.Item>

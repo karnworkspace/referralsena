@@ -168,6 +168,7 @@ const AgentDashboard = () => {
         lastName: values.lastName,
         email: values.email || null,
         phone: values.phone,
+        idCard: values.idCard,
         projectId: values.projectId || null,
         budgetMin,
         budgetMax,
@@ -485,6 +486,22 @@ const AgentDashboard = () => {
                     ]}
                   >
                     <Input placeholder="081-234-5678" />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="idCard"
+                    label={<span>หมายเลขบัตรประชาชน <Text type="danger">*</Text></span>}
+                    rules={[
+                      { required: true, message: 'กรุณากรอกหมายเลขบัตรประชาชน' },
+                      { len: 13, message: 'หมายเลขบัตรประชาชนต้องมี 13 หลัก' },
+                      { pattern: /^[0-9]+$/, message: 'หมายเลขบัตรประชาชนควรเป็นตัวเลขเท่านั้น' }
+                    ]}
+                  >
+                    <Input placeholder="1234567890123" maxLength={13} />
                   </Form.Item>
                 </Col>
               </Row>

@@ -65,7 +65,7 @@ const Customer = sequelize.define('Customer', {
     field: 'budget_max'
   },
   status: {
-    type: DataTypes.ENUM('active', 'inactive', 'pending'),
+    type: DataTypes.ENUM('pending', 'duplicate', 'approved'),
     defaultValue: 'pending'
   },
   referralType: {
