@@ -580,6 +580,7 @@ const CustomerManagement = () => {
           onFinish={handleSubmit}
         >
           <Row gutter={16}>
+            {/* Hidden: รหัสลูกค้า field - ไม่แสดงใน admin form
             <Col xs={24} sm={12}>
               <Form.Item
                 name="customerCode"
@@ -619,6 +620,19 @@ const CustomerManagement = () => {
                     💡 รหัสลูกค้าถูกสร้างโดยอัตโนมัติจากข้อมูลล่าสุดในระบบ
                   </div>
                 )}
+              </Form.Item>
+            </Col>
+            */}
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="referralType"
+                label="ประเภทลูกค้า"
+                rules={[{ required: true, message: 'กรุณาเลือกประเภทลูกค้า' }]}
+              >
+                <Select placeholder="เลือกประเภทลูกค้า">
+                  <Option value="self">แนะนำตัวเอง</Option>
+                  <Option value="friend">แนะนำเพื่อน</Option>
+                </Select>
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>

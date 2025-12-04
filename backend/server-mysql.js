@@ -959,7 +959,7 @@ app.post('/api/customers', checkAuth, async (req, res) => {
     const {
       customerCode, firstName, lastName, phone, email, idCard,
       agentId, projectId, budgetMin, budgetMax,
-      status = 'new', source = 'referral', notes
+      status = 'new', source = 'referral', notes, referralType
     } = req.body;
 
     // Check for duplicate customerCode
@@ -1032,6 +1032,7 @@ app.post('/api/customers', checkAuth, async (req, res) => {
       status,
       source,
       notes: notes || null,
+      referralType: referralType || null,
       createdBy: req.user.id,
       updatedBy: req.user.id
     });
@@ -1156,7 +1157,7 @@ app.put('/api/customers/:id', checkAuth, async (req, res) => {
     const {
       customerCode, firstName, lastName, phone, email, idCard,
       agentId, projectId, budgetMin, budgetMax,
-      status, source, notes
+      status, source, notes, referralType
     } = req.body;
 
     const customer = await Customer.findByPk(id);
@@ -1235,6 +1236,7 @@ app.put('/api/customers/:id', checkAuth, async (req, res) => {
       ...(status && { status }),
       ...(source && { source }),
       ...(notes !== undefined && { notes: notes || null }),
+      ...(referralType !== undefined && { referralType: referralType || null }),
       updatedBy: req.user.id
     });
 

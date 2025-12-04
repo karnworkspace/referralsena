@@ -38,7 +38,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser, updateUser } from '../store/authSlice';
 import { fetchCustomers } from '../store/customersSlice';
 import { useNavigate } from 'react-router-dom';
-import { projectsAPI } from '../services/api';
+import { projectsAPI, customersAPI } from '../services/api';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -171,20 +171,12 @@ const AgentDashboard = () => {
         projectId: values.projectId || null,
         budgetMin,
         budgetMax,
+        referralType: values.referralType,
         agentId: user.agentId,
         status: 'pending'
       };
 
-      const response = await fetch('/api/customers', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(customerData)
-      });
-
-      const data = await response.json();
+      const data = await customersAPI.create(customerData);
 
       if (data.success) {
         notification.success({
@@ -272,12 +264,13 @@ const AgentDashboard = () => {
   }));
 
   const customerColumns = [
-    {
-      title: 'รหัสลูกค้า',
-      dataIndex: 'customerCode',
-      key: 'customerCode',
-      render: (text) => <Tag color="green">{text}</Tag>
-    },
+    // Hidden: รหัสลูกค้า column
+    // {
+    //   title: 'รหัสลูกค้า',
+    //   dataIndex: 'customerCode',
+    //   key: 'customerCode',
+    //   render: (text) => <Tag color="green">{text}</Tag>
+    // },
     {
       title: 'ชื่อ-นามสกุล',
       dataIndex: 'name',
@@ -433,6 +426,18 @@ const AgentDashboard = () => {
                       disabled
                       style={{ backgroundColor: '#f5f5f5', color: '#000' }}
                     />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="referralType"
+                    label={<span>ประเภทลูกค้า <Text type="danger">*</Text></span>}
+                    rules={[{ required: true, message: 'กรุณาเลือกประเภทลูกค้า' }]}
+                  >
+                    <Select placeholder="เลือกประเภทลูกค้า">
+                      <Select.Option value="self">แนะนำตัวเอง</Select.Option>
+                      <Select.Option value="friend">แนะนำเพื่อน</Select.Option>
+                    </Select>
                   </Form.Item>
                 </Col>
               </Row>
@@ -734,7 +739,11 @@ const AgentDashboard = () => {
               <Button type="text" icon={<BellOutlined />} size="large" />
             </Badge>
 
-            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+            <Dropdown
+              menu={{ items: userMenuItems }}
+              placement="bottomRight"
+              trigger={['click']}
+            >
               <Space style={{ cursor: 'pointer' }}>
                 <Avatar icon={<UserOutlined />} />
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>

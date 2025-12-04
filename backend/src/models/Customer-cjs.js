@@ -68,6 +68,12 @@ const Customer = sequelize.define('Customer', {
     type: DataTypes.ENUM('active', 'inactive', 'pending'),
     defaultValue: 'pending'
   },
+  referralType: {
+    type: DataTypes.ENUM('self', 'friend'),
+    allowNull: true,
+    field: 'referral_type',
+    comment: 'ประเภทลูกค้า: self=แนะนำตัวเอง, friend=แนะนำเพื่อน'
+  },
   source: {
     type: DataTypes.ENUM('referral', 'walk_in', 'online', 'phone', 'other'),
     defaultValue: 'referral'
