@@ -97,6 +97,19 @@ const ProjectManagement = () => {
 
   const columns = [
     {
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
+      width: 80,
+      align: 'center',
+    },
+    {
+      title: 'รหัสโครงการ',
+      dataIndex: 'projectCode',
+      key: 'projectCode',
+      width: 120,
+    },
+    {
       title: 'ชื่อโครงการ',
       dataIndex: 'projectName',
       key: 'projectName',
