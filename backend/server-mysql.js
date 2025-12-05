@@ -82,8 +82,14 @@ if (config.server.nodeEnv === 'production') {
 }
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '10mb', charset: 'utf-8' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Set charset middleware
+app.use((req, res, next) => {
+  res.set('Content-Type', 'application/json; charset=utf-8');
+  next();
+});
 
 // Compression
 app.use(compression());
