@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Layout, 
-  Menu, 
-  Button, 
-  Avatar, 
-  Dropdown, 
-  Typography, 
-  Card, 
-  Row, 
-  Col, 
+import {
+  Layout,
+  Menu,
+  Button,
+  Avatar,
+  Dropdown,
+  Typography,
+  Card,
+  Row,
+  Col,
   Statistic,
   Space,
   Badge,
@@ -16,6 +16,7 @@ import {
   Tag,
   Form,
   Input,
+  Select,
   notification,
   Modal
 } from 'antd';
@@ -30,12 +31,14 @@ import {
   BellOutlined,
   TeamOutlined,
   EditOutlined,
-  SaveOutlined
+  SaveOutlined,
+  UserAddOutlined
 } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser, updateUser } from '../store/authSlice';
 import { fetchCustomers } from '../store/customersSlice';
 import { useNavigate } from 'react-router-dom';
+import { projectsAPI, customersAPI } from '../services/api';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -49,7 +52,10 @@ const AgentDashboard = () => {
   const [selectedMenu, setSelectedMenu] = useState('dashboard');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileForm] = Form.useForm();
+  const [addCustomerForm] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
 
   // Load agent's customers on component mount
   useEffect(() => {
@@ -62,6 +68,30 @@ const AgentDashboard = () => {
       }));
     }
   }, [dispatch, user?.agentId]);
+
+  // Fetch active projects for dropdown
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setProjectsLoading(true);
+        const response = await projectsAPI.getAll({ limit: 1000 });
+        if (response.data) {
+          // Filter only active projects
+          const activeProjects = response.data.filter(project => project.isActive);
+          setProjects(activeProjects);
+        }
+      } catch (error) {
+        notification.error({
+          message: 'เกิดข้อผิดพลาด',
+          description: 'ไม่สามารถโหลดข้อมูลโครงการได้'
+        });
+      } finally {
+        setProjectsLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
 
   const handleLogout = () => {
     dispatch(logoutUser());
@@ -83,13 +113,11 @@ const AgentDashboard = () => {
   const handleUpdateProfile = async (values) => {
     setLoading(true);
     try {
-      // Call API to update profile
-      const token = localStorage.getItem('token');
       const response = await fetch('/api/agents/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify(values)
       });
@@ -111,6 +139,68 @@ const AgentDashboard = () => {
       notification.error({
         message: 'เกิดข้อผิดพลาด',
         description: error.message || 'ไม่สามารถอัพเดทเบอร์โทรได้'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddCustomer = async (values) => {
+    setLoading(true);
+    try {
+      // Parse budget range
+      let budgetMin = null;
+      let budgetMax = null;
+
+      if (values.budget) {
+        if (values.budget === '20000000+') {
+          budgetMin = 20000000;
+          budgetMax = null;
+        } else {
+          const [min, max] = values.budget.split('-').map(Number);
+          budgetMin = min;
+          budgetMax = max;
+        }
+      }
+
+      const customerData = {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email || null,
+        phone: values.phone,
+        idCard: values.idCard,
+        projectId: values.projectId || null,
+        budgetMin,
+        budgetMax,
+        referralType: values.referralType,
+        agentId: user.agentId,
+        status: 'pending'
+      };
+
+      const data = await customersAPI.create(customerData);
+
+      if (data.success) {
+        notification.success({
+          message: 'สำเร็จ',
+          description: 'เพิ่มข้อมูลลูกค้าสำเร็จ'
+        });
+        addCustomerForm.resetFields();
+        // Refresh customer list
+        dispatch(fetchCustomers({
+          agentId: user.agentId,
+          status: 'all',
+          page: 1,
+          limit: 100
+        }));
+        // Navigate back to customers list
+        setSelectedMenu('customers');
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (error) {
+      notification.error({
+        message: 'เกิดข้อผิดพลาด',
+        description: error.message || 'ไม่สามารถเพิ่มข้อมูลลูกค้าได้'
       });
     } finally {
       setLoading(false);
@@ -147,6 +237,11 @@ const AgentDashboard = () => {
       label: 'ลูกค้าของฉัน',
     },
     {
+      key: 'add-customer',
+      icon: <UserAddOutlined />,
+      label: 'เพิ่มข้อมูลลูกค้า',
+    },
+    {
       key: 'profile',
       icon: <ProfileOutlined />,
       label: 'ข้อมูลส่วนตัว',
@@ -154,7 +249,7 @@ const AgentDashboard = () => {
   ];
 
   // Filter customers for current agent
-  const myCustomers = customers.filter(customer => 
+  const myCustomers = customers.filter(customer =>
     customer.agentId === user?.agentId
   ).map(customer => ({
     key: customer.id,
@@ -166,16 +261,17 @@ const AgentDashboard = () => {
     email: customer.email,
     phone: customer.phone,
     status: customer.status,
-    registrationDate: customer.registrationDate
+    registrationDate: customer.createdAt || customer.registrationDate || customer.created_at
   }));
 
   const customerColumns = [
-    {
-      title: 'รหัสลูกค้า',
-      dataIndex: 'customerCode',
-      key: 'customerCode',
-      render: (text) => <Tag color="green">{text}</Tag>
-    },
+    // Hidden: รหัสลูกค้า column
+    // {
+    //   title: 'รหัสลูกค้า',
+    //   dataIndex: 'customerCode',
+    //   key: 'customerCode',
+    //   render: (text) => <Tag color="green">{text}</Tag>
+    // },
     {
       title: 'ชื่อ-นามสกุล',
       dataIndex: 'name',
@@ -195,17 +291,49 @@ const AgentDashboard = () => {
       title: 'สถานะ',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => (
-        <Tag color={status === 'active' ? 'green' : 'red'}>
-          {status === 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน'}
-        </Tag>
-      )
+      render: (status) => {
+        const statusConfig = {
+          pending: {
+            color: 'orange',
+            text: 'รอดำเนินการตรวจสอบ'
+          },
+          duplicate: {
+            color: 'red',
+            text: 'ผู้ที่ท่านแนะนำ ซ้ำกับรายชื่อของฐานข้อมูลโครงการ'
+          },
+          approved: {
+            color: 'green',
+            text: 'ผู้ถูกแนะนำของท่านผ่านเงื่อนไข'
+          }
+        };
+
+        const config = statusConfig[status] || { color: 'default', text: status };
+
+        return (
+          <Tag color={config.color} style={{ whiteSpace: 'normal', maxWidth: '300px' }}>
+            {config.text}
+          </Tag>
+        );
+      }
     },
     {
       title: 'วันที่ลงทะเบียน',
       dataIndex: 'registrationDate',
       key: 'registrationDate',
-      render: (date) => new Date(date).toLocaleDateString('th-TH')
+      render: (date) => {
+        if (!date) return '-';
+        try {
+          const d = new Date(date);
+          if (isNaN(d.getTime())) return '-';
+          return d.toLocaleDateString('th-TH', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+        } catch (e) {
+          return '-';
+        }
+      }
     }
   ];
 
@@ -227,13 +355,14 @@ const AgentDashboard = () => {
               <Col xs={24} sm={12} lg={8}>
                 <Card>
                   <Statistic
-                    title="ลูกค้าใช้งาน"
-                    value={myCustomers.filter(c => c.status === 'active').length}
+                    title="ผู้ถูกแนะนำที่ผ่านเงื่อนไข"
+                    value={myCustomers.filter(c => c.status === 'approved').length}
                     valueStyle={{ color: '#1890ff' }}
                   />
                 </Card>
               </Col>
-              <Col xs={24} sm={12} lg={8}>
+              {/* Disabled: ยอดขายเดือนนี้ - รอระบบขายเสร็จก่อน */}
+              {/* <Col xs={24} sm={12} lg={8}>
                 <Card>
                   <Statistic
                     title="ยอดขายเดือนนี้"
@@ -242,12 +371,12 @@ const AgentDashboard = () => {
                     valueStyle={{ color: '#cf1322' }}
                   />
                 </Card>
-              </Col>
+              </Col> */}
             </Row>
-            
+
             <Card title="ลูกค้าล่าสุด" style={{ marginBottom: '24px' }}>
-              <Table 
-                dataSource={myCustomers} 
+              <Table
+                dataSource={myCustomers}
                 columns={customerColumns}
                 pagination={false}
                 size="small"
@@ -262,8 +391,8 @@ const AgentDashboard = () => {
       case 'customers':
         return (
           <Card title="ลูกค้าของฉัน">
-            <Table 
-              dataSource={myCustomers} 
+            <Table
+              dataSource={myCustomers}
               columns={customerColumns}
               loading={customersLoading}
               pagination={{
@@ -279,14 +408,173 @@ const AgentDashboard = () => {
             />
           </Card>
         );
+      case 'add-customer':
+        return (
+          <Card title="เพิ่มข้อมูลลูกค้า">
+            <Form
+              form={addCustomerForm}
+              layout="vertical"
+              onFinish={handleAddCustomer}
+              style={{ maxWidth: '800px' }}
+            >
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    label="รหัสนายหน้า"
+                  >
+                    <Input
+                      value={`${user?.agentCode} - ${user?.firstName} ${user?.lastName}`}
+                      disabled
+                      style={{ backgroundColor: '#f5f5f5', color: '#000' }}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="referralType"
+                    label={<span>ประเภทลูกค้า <Text type="danger">*</Text></span>}
+                    rules={[{ required: true, message: 'กรุณาเลือกประเภทลูกค้า' }]}
+                  >
+                    <Select placeholder="เลือกประเภทลูกค้า">
+                      <Select.Option value="self">แนะนำตัวเอง</Select.Option>
+                      <Select.Option value="friend">แนะนำเพื่อน</Select.Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="firstName"
+                    label={<span>ชื่อ <Text type="danger">*</Text></span>}
+                    rules={[{ required: true, message: 'กรุณากรอกชื่อ' }]}
+                  >
+                    <Input placeholder="ชื่อ" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="lastName"
+                    label={<span>นามสกุล <Text type="danger">*</Text></span>}
+                    rules={[{ required: true, message: 'กรุณากรอกนามสกุล' }]}
+                  >
+                    <Input placeholder="นามสกุล" />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="email"
+                    label="Email"
+                    rules={[
+                      { type: 'email', message: 'รูปแบบอีเมลไม่ถูกต้อง' }
+                    ]}
+                  >
+                    <Input placeholder="email@example.com" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="phone"
+                    label={<span>เบอร์โทร <Text type="danger">*</Text></span>}
+                    rules={[
+                      { required: true, message: 'กรุณากรอกเบอร์โทร' },
+                      { pattern: /^[0-9-]+$/, message: 'เบอร์โทรควรเป็นตัวเลขและขีดกลางเท่านั้น' }
+                    ]}
+                  >
+                    <Input placeholder="081-234-5678" />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="idCard"
+                    label={<span>หมายเลขบัตรประชาชน <Text type="danger">*</Text></span>}
+                    rules={[
+                      { required: true, message: 'กรุณากรอกหมายเลขบัตรประชาชน' },
+                      { len: 13, message: 'หมายเลขบัตรประชาชนต้องมี 13 หลัก' },
+                      { pattern: /^[0-9]+$/, message: 'หมายเลขบัตรประชาชนควรเป็นตัวเลขเท่านั้น' }
+                    ]}
+                  >
+                    <Input placeholder="1234567890123" maxLength={13} />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="projectId"
+                    label="ชื่อโครงการ"
+                  >
+                    <Select
+                      placeholder="เลือกโครงการ"
+                      loading={projectsLoading}
+                      showSearch
+                      optionFilterProp="children"
+                      filterOption={(input, option) =>
+                        option.children.toLowerCase().includes(input.toLowerCase())
+                      }
+                    >
+                      {projects.map(project => (
+                        <Select.Option key={project.id} value={project.id}>
+                          {project.name || project.projectName}
+                        </Select.Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="budget"
+                    label={<span>งบประมาณ <Text type="danger">*</Text></span>}
+                    rules={[{ required: true, message: 'กรุณาเลือกงบประมาณ' }]}
+                  >
+                    <Select placeholder="เลือกงบประมาณ">
+                      <Select.Option value="1000000-3000000">1-3 ล้านบาท</Select.Option>
+                      <Select.Option value="3000000-5000000">3-5 ล้านบาท</Select.Option>
+                      <Select.Option value="5000000-10000000">5-10 ล้านบาท</Select.Option>
+                      <Select.Option value="10000000-20000000">10-20 ล้านบาท</Select.Option>
+                      <Select.Option value="20000000+">20 ล้านบาทขึ้นไป</Select.Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Form.Item style={{ marginTop: '24px' }}>
+                <Space>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading}
+                    style={{
+                      background: 'linear-gradient(135deg, #00BCD4 0%, #0097A7 100%)',
+                      border: 'none'
+                    }}
+                  >
+                    บันทึกข้อมูล
+                  </Button>
+                  <Button onClick={() => addCustomerForm.resetFields()}>
+                    ล้างข้อมูล
+                  </Button>
+                </Space>
+              </Form.Item>
+            </Form>
+          </Card>
+        );
       case 'profile':
         return (
-          <Card 
+          <Card
             title="ข้อมูลส่วนตัว"
             extra={
               !isEditingProfile && (
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   icon={<EditOutlined />}
                   onClick={handleEditProfile}
                 >
@@ -357,7 +645,7 @@ const AgentDashboard = () => {
                     </Form.Item>
                   </Col>
                 </Row>
-                
+
                 <Row gutter={16}>
                   <Col span={12}>
                     <Form.Item
@@ -380,7 +668,7 @@ const AgentDashboard = () => {
                     </Form.Item>
                   </Col>
                 </Row>
-                
+
                 <Form.Item
                   name="phone"
                   label="เบอร์โทร (สามารถแก้ไขได้)"
@@ -390,15 +678,15 @@ const AgentDashboard = () => {
                 >
                   <Input placeholder="081-234-5678" />
                 </Form.Item>
-                
+
                 <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
                   <Space>
                     <Button onClick={handleCancelEdit}>
                       ยกเลิก
                     </Button>
-                    <Button 
-                      type="primary" 
-                      htmlType="submit" 
+                    <Button
+                      type="primary"
+                      htmlType="submit"
                       icon={<SaveOutlined />}
                       loading={loading}
                     >
@@ -418,17 +706,17 @@ const AgentDashboard = () => {
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider trigger={null} collapsible collapsed={collapsed}>
-        <div style={{ 
-          height: '64px', 
-          padding: '16px', 
+        <div style={{
+          height: '64px',
+          padding: '16px',
           background: 'rgba(255, 255, 255, 0.1)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: collapsed ? 'center' : 'flex-start',
           gap: collapsed ? 0 : 10
         }}>
-          <img 
-            src="/sena-logo.png" 
+          <img
+            src="/sena-logo.png"
             alt="SENA"
             style={{ width: collapsed ? 28 : 28, height: 28, objectFit: 'contain', borderRadius: 4 }}
           />
@@ -444,10 +732,10 @@ const AgentDashboard = () => {
           onSelect={({ key }) => setSelectedMenu(key)}
         />
       </Sider>
-      
+
       <Layout>
-        <Header style={{ 
-          padding: '0 24px', 
+        <Header style={{
+          padding: '0 24px',
           background: '#fff',
           display: 'flex',
           justifyContent: 'space-between',
@@ -462,13 +750,17 @@ const AgentDashboard = () => {
               style={{ fontSize: '16px', width: 64, height: 64 }}
             />
           </Space>
-          
+
           <Space size="middle">
             <Badge count={0}>
               <Button type="text" icon={<BellOutlined />} size="large" />
             </Badge>
-            
-            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+
+            <Dropdown
+              menu={{ items: userMenuItems }}
+              placement="bottomRight"
+              trigger={['click']}
+            >
               <Space style={{ cursor: 'pointer' }}>
                 <Avatar icon={<UserOutlined />} />
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
@@ -481,9 +773,9 @@ const AgentDashboard = () => {
             </Dropdown>
           </Space>
         </Header>
-        
-        <Content style={{ 
-          margin: '24px', 
+
+        <Content style={{
+          margin: '24px',
           padding: '24px',
           background: '#fff',
           borderRadius: '8px',

@@ -28,6 +28,7 @@ import {
   PhoneOutlined,
   IdcardOutlined,
   HomeOutlined,
+  ReloadOutlined,
   TeamOutlined,
   EyeOutlined
 } from '@ant-design/icons';
@@ -41,6 +42,7 @@ import {
   setPagination,
   clearError
 } from '../store/customersSlice';
+import { projectsAPI, customersAPI } from '../services/api';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -48,15 +50,9 @@ const { TextArea } = Input;
 
 const getStatusTag = (status) => {
   const statusMap = {
-    new: { color: 'blue', text: 'ใหม่' },
-    contacted: { color: 'cyan', text: 'ติดต่อแล้ว' },
-    interested: { color: 'geekblue', text: 'สนใจ' },
-    visit_scheduled: { color: 'purple', text: 'นัดหมายแล้ว' },
-    visited: { color: 'magenta', text: 'เยี่ยมชมแล้ว' },
-    negotiating: { color: 'gold', text: 'กำลังเจรจา' },
-    closed_won: { color: 'green', text: 'ขายสำเร็จ' },
-    closed_lost: { color: 'red', text: 'ขายไม่สำเร็จ' },
-    pending: { color: 'orange', text: 'รออนุมัติ' },
+    approved: { color: 'green', text: 'ผ่าน' },
+    duplicate: { color: 'red', text: 'ไม่ผ่าน' },
+    pending: { color: 'orange', text: 'รออนุมัติ' }
   };
 
   const { color, text } = statusMap[status] || { color: 'default', text: status };
@@ -65,15 +61,16 @@ const getStatusTag = (status) => {
 
 const CustomerManagement = () => {
   const dispatch = useDispatch();
-  const { 
-    customers, 
+  const {
+    customers,
     agentsList,
-    loading, 
+    loading,
     agentsLoading,
-    error, 
-    pagination, 
-    filters 
+    error,
+    pagination,
+    filters
   } = useSelector((state) => state.customers);
+
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
@@ -81,7 +78,15 @@ const CustomerManagement = () => {
   const [viewingCustomer, setViewingCustomer] = useState(null);
   const [form] = Form.useForm();
 
-  // Load customers and agents on component mount
+  // States for auto-increment customer code
+  const [nextCustomerCode, setNextCustomerCode] = useState('');
+  const [loadingCustomerCode, setLoadingCustomerCode] = useState(false);
+
+  // State for projects list
+  const [projectsList, setProjectsList] = useState([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+
+  // Load customers, agents and projects on component mount
   useEffect(() => {
     dispatch(fetchCustomers({
       page: pagination.current,
@@ -89,7 +94,21 @@ const CustomerManagement = () => {
       ...filters
     }));
     dispatch(fetchAgentsList());
+    fetchProjects();
   }, [dispatch, pagination.current, pagination.pageSize, filters]);
+
+  // Fetch projects from API
+  const fetchProjects = async () => {
+    try {
+      setProjectsLoading(true);
+      const response = await projectsAPI.getAll();
+      setProjectsList(response.data || []);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    } finally {
+      setProjectsLoading(false);
+    }
+  };
 
   // Handle error notifications
   useEffect(() => {
@@ -110,17 +129,18 @@ const CustomerManagement = () => {
 
   // Table columns
   const columns = [
-    {
-      title: 'รหัสลูกค้า',
-      dataIndex: 'customerCode',
-      key: 'customerCode',
-      width: 120,
-      render: (text, record) => (
-        <a onClick={() => handleView(record)}>
-          <Tag color="green" style={{ cursor: 'pointer' }}>{text}</Tag>
-        </a>
-      )
-    },
+    // Hidden: รหัสลูกค้า column - not needed in customer management view
+    // {
+    //   title: 'รหัสลูกค้า',
+    //   dataIndex: 'customerCode',
+    //   key: 'customerCode',
+    //   width: 120,
+    //   render: (text, record) => (
+    //     <a onClick={() => handleView(record)}>
+    //       <Tag color="green" style={{ cursor: 'pointer' }}>{text}</Tag>
+    //     </a>
+    //   )
+    // },
     {
       title: 'ชื่อ-นามสกุล',
       key: 'fullName',
@@ -149,7 +169,7 @@ const CustomerManagement = () => {
       dataIndex: 'phone',
       key: 'phone',
       width: 130,
-      render: (text) => text ? (
+      render: (text) => (text && text.trim() !== '') ? (
         <Space>
           <PhoneOutlined />
           <span>{text}</span>
@@ -158,39 +178,88 @@ const CustomerManagement = () => {
     },
     {
       title: 'ชื่อโครงการ',
-      dataIndex: 'projectName',
       key: 'projectName',
       width: 150,
-      render: (text) => text || '-'
+      render: (_, record) => {
+        // Check if project data exists and has projectName
+        if (record.project && record.project.projectName) {
+          return record.project.projectName;
+        }
+        // Check if projectId exists and find project name from projectsList
+        if (record.projectId) {
+          const project = projectsList.find(p => p.id === record.projectId);
+          return project ? project.projectName : `Project ID: ${record.projectId}`;
+        }
+        // Fallback to direct projectName field
+        if (record.projectName) {
+          return record.projectName;
+        }
+        return '-';
+      }
     },
     {
       title: 'งบประมาณ',
-      dataIndex: 'budget',
       key: 'budget',
-      width: 120,
-      render: (text) => text ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(text) : '-'
+      width: 160,
+      render: (_, record) => {
+        // Check for budgetMin and budgetMax first
+        if (record.budgetMin && record.budgetMax) {
+          const min = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(record.budgetMin);
+          const max = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(record.budgetMax);
+          return (
+            <div style={{ fontSize: '12px', lineHeight: '1.1' }}>
+              <div>฿{min}</div>
+              <div style={{ color: '#999', textAlign: 'center', fontSize: '10px' }}>-</div>
+              <div>฿{max}</div>
+            </div>
+          );
+        }
+        // Fallback to single budget field
+        if (record.budget && record.budget > 0) {
+          const formatted = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(record.budget);
+          return <span style={{ fontSize: '12px' }}>฿{formatted}</span>;
+        }
+        return '-';
+      }
     },
     {
       title: 'เอเจนต์',
       key: 'agent',
       width: 150,
-      render: (_, record) => record.agent ? (
-        <Space>
-          <TeamOutlined />
-          <span>{`${record.agent.agentCode} - ${record.agent.firstName}`}</span>
-        </Space>
-      ) : '-'
+      render: (_, record) => {
+
+        if (record.agent && record.agent.agentCode && record.agent.firstName) {
+          return (
+            <Space>
+              <TeamOutlined />
+              <span>{`${record.agent.agentCode} - ${record.agent.firstName}`}</span>
+            </Space>
+          );
+        }
+
+        // If no agent object but has agentId, show agentId
+        if (record.agentId) {
+          return (
+            <Space>
+              <TeamOutlined />
+              <span>Agent ID: {record.agentId}</span>
+            </Space>
+          );
+        }
+
+        return '-';
+      }
     },
     {
       title: 'ที่อยู่',
       dataIndex: 'address',
       key: 'address',
-      width: 200,
-      render: (text) => text ? (
+      width: 150,
+      render: (text) => (text && text.trim() !== '') ? (
         <Tooltip title={text}>
-          <div style={{ 
-            maxWidth: '180px', 
-            overflow: 'hidden', 
+          <div style={{
+            maxWidth: '130px',
+            overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap'
           }}>
@@ -201,18 +270,27 @@ const CustomerManagement = () => {
       ) : '-'
     },
     {
+      title: 'วันที่ลงทะเบียน',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      width: 130,
+      render: (date, record) => {
+        // Try different field names
+        const dateValue = date || record.createdAt || record.created_at;
+        if (!dateValue) return '-';
+        try {
+          return new Date(dateValue).toLocaleDateString('th-TH');
+        } catch (error) {
+          return '-';
+        }
+      }
+    },
+    {
       title: 'สถานะ',
       dataIndex: 'status',
       key: 'status',
       width: 100,
       render: (status) => getStatusTag(status)
-    },
-    {
-      title: 'วันที่ลงทะเบียน',
-      dataIndex: 'registrationDate',
-      key: 'registrationDate',
-      width: 130,
-      render: (date) => new Date(date).toLocaleDateString('th-TH')
     },
     {
       title: 'การจัดการ',
@@ -281,11 +359,30 @@ const CustomerManagement = () => {
     }));
   };
 
+  // Fetch next customer code
+  const fetchNextCustomerCode = async () => {
+    try {
+      setLoadingCustomerCode(true);
+      const response = await customersAPI.getNextCode();
+      setNextCustomerCode(response.data.nextCustomerCode);
+      form.setFieldValue('customerCode', response.data.nextCustomerCode);
+    } catch (error) {
+      console.error('Error fetching next customer code:', error);
+      // Fallback to default if API fails
+      setNextCustomerCode('CU001');
+      form.setFieldValue('customerCode', 'CU001');
+    } finally {
+      setLoadingCustomerCode(false);
+    }
+  };
+
   // Handle create new customer
   const handleCreate = () => {
     setEditingCustomer(null);
     setIsModalVisible(true);
     form.resetFields();
+    // Fetch next customer code for new customer
+    fetchNextCustomerCode();
   };
 
   // Handle edit customer
@@ -306,13 +403,14 @@ const CustomerManagement = () => {
       lastName: customer.lastName,
       email: customer.email,
       phone: customer.phone,
-      projectName: customer.projectName,
+      projectId: customer.projectId,
       budgetRange: budgetRange,
       idCard: customer.idCard,
       address: customer.address,
       agentId: customer.agentId,
       status: customer.status,
-      registrationDate: customer.registrationDate
+      registrationDate: customer.registrationDate ?
+        new Date(customer.registrationDate).toISOString().split('T')[0] : ''
     });
   };
 
@@ -424,14 +522,8 @@ const CustomerManagement = () => {
               onChange={handleStatusFilter}
             >
               <Option value="all">ทั้งหมด</Option>
-              <Option value="new">ใหม่</Option>
-              <Option value="contacted">ติดต่อแล้ว</Option>
-              <Option value="interested">สนใจ</Option>
-              <Option value="visit_scheduled">นัดหมายแล้ว</Option>
-              <Option value="visited">เยี่ยมชมแล้ว</Option>
-              <Option value="negotiating">กำลังเจรจา</Option>
-              <Option value="closed_won">ขายสำเร็จ</Option>
-              <Option value="closed_lost">ขายไม่สำเร็จ</Option>
+              <Option value="approved">ผ่าน</Option>
+              <Option value="duplicate">ไม่ผ่าน</Option>
               <Option value="pending">รออนุมัติ</Option>
             </Select>
           </Col>
@@ -459,7 +551,7 @@ const CustomerManagement = () => {
           dataSource={customers}
           rowKey="id"
           loading={loading}
-          scroll={{ x: 1400 }}
+          scroll={{ x: 1600 }}
           pagination={{
             current: pagination.current,
             pageSize: pagination.pageSize,
@@ -488,19 +580,59 @@ const CustomerManagement = () => {
           onFinish={handleSubmit}
         >
           <Row gutter={16}>
+            {/* Hidden: รหัสลูกค้า field - ไม่แสดงใน admin form
             <Col xs={24} sm={12}>
               <Form.Item
                 name="customerCode"
-                label="รหัสลูกค้า"
+                label={
+                  !editingCustomer ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      รหัสลูกค้า
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<ReloadOutlined />}
+                        onClick={fetchNextCustomerCode}
+                        loading={loadingCustomerCode}
+                        title="สร้างรหัสใหม่"
+                        style={{ padding: '0 4px', height: '20px', minWidth: '20px' }}
+                      />
+                    </div>
+                  ) : 'รหัสลูกค้า'
+                }
                 rules={[
                   { required: true, message: 'กรุณาใส่รหัสลูกค้า' },
                   { pattern: /^[A-Z0-9]+$/, message: 'รหัสลูกค้าควรเป็นตัวอักษรพิมพ์ใหญ่และตัวเลขเท่านั้น' }
                 ]}
               >
-                <Input 
-                  placeholder="เช่น CU001" 
-                  disabled={!!editingCustomer}
+                <Input
+                  placeholder={loadingCustomerCode ? "กำลังโหลด..." : nextCustomerCode || "เช่น CU001"}
+                  disabled={!editingCustomer}
+                  style={!editingCustomer ? {
+                    backgroundColor: '#f0f8ff',
+                    border: '1px solid #1890ff',
+                    color: '#1890ff',
+                    fontWeight: 'bold'
+                  } : {}}
                 />
+                {!editingCustomer && (
+                  <div style={{ fontSize: '12px', color: '#999', marginTop: '4px' }}>
+                    💡 รหัสลูกค้าถูกสร้างโดยอัตโนมัติจากข้อมูลล่าสุดในระบบ
+                  </div>
+                )}
+              </Form.Item>
+            </Col>
+            */}
+            <Col xs={24} sm={12}>
+              <Form.Item
+                name="referralType"
+                label="ประเภทลูกค้า"
+                rules={[{ required: true, message: 'กรุณาเลือกประเภทลูกค้า' }]}
+              >
+                <Select placeholder="เลือกประเภทลูกค้า">
+                  <Option value="self">แนะนำตัวเอง</Option>
+                  <Option value="friend">แนะนำเพื่อน</Option>
+                </Select>
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
@@ -510,14 +642,8 @@ const CustomerManagement = () => {
                 rules={[{ required: true, message: 'กรุณาเลือกสถานะ' }]}
               >
                 <Select placeholder="เลือกสถานะ">
-                  <Option value="new">ใหม่</Option>
-                  <Option value="contacted">ติดต่อแล้ว</Option>
-                  <Option value="interested">สนใจ</Option>
-                  <Option value="visit_scheduled">นัดหมายแล้ว</Option>
-                  <Option value="visited">เยี่ยมชมแล้ว</Option>
-                  <Option value="negotiating">กำลังเจรจา</Option>
-                  <Option value="closed_won">ขายสำเร็จ</Option>
-                  <Option value="closed_lost">ขายไม่สำเร็จ</Option>
+                  <Option value="approved">ผ่าน</Option>
+                  <Option value="duplicate">ไม่ผ่าน</Option>
                   <Option value="pending">รออนุมัติ</Option>
                 </Select>
               </Form.Item>
@@ -573,10 +699,28 @@ const CustomerManagement = () => {
             </Col>
             <Col xs={24} sm={12}>
               <Form.Item
-                name="projectName"
+                name="projectId"
                 label="ชื่อโครงการ"
               >
-                <Input placeholder="ชื่อโครงการ" />
+                <Select
+                  placeholder="เลือกโครงการ"
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.children ?? '').toLowerCase().includes(input.toLowerCase())
+                  }
+                  allowClear
+                  loading={projectsLoading}
+                >
+                  {projectsList
+                    .filter(project => project.isActive === true)
+                    .map(project => (
+                      <Option key={project.id} value={project.id}>
+                        {project.projectName}
+                      </Option>
+                    ))
+                  }
+                </Select>
               </Form.Item>
             </Col>
           </Row>
@@ -594,18 +738,6 @@ const CustomerManagement = () => {
                   <Option value="4000000-5000000">4-5 ล้านบาท</Option>
                   <Option value="5000000-">มากกว่า 5 ล้านบาท</Option>
                 </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                name="registrationDate"
-                label="วันที่ลงทะเบียน"
-                rules={[{ required: true, message: 'กรุณาใส่วันที่ลงทะเบียน' }]}
-              >
-                <Input 
-                  type="date" 
-                  disabled={!!editingCustomer}
-                />
               </Form.Item>
             </Col>
           </Row>
@@ -693,9 +825,26 @@ const CustomerManagement = () => {
             <Descriptions.Item label="นามสกุล">{viewingCustomer.lastName}</Descriptions.Item>
             <Descriptions.Item label="อีเมล" span={2}>{viewingCustomer.email}</Descriptions.Item>
             <Descriptions.Item label="เบอร์โทร">{viewingCustomer.phone}</Descriptions.Item>
-            <Descriptions.Item label="ชื่อโครงการ">{viewingCustomer.projectName || '-'}</Descriptions.Item>
+            <Descriptions.Item label="ชื่อโครงการ">
+              {(() => {
+                if (viewingCustomer.project && viewingCustomer.project.projectName) {
+                  return viewingCustomer.project.projectName;
+                }
+                if (viewingCustomer.projectId) {
+                  const project = projectsList.find(p => p.id === viewingCustomer.projectId);
+                  return project ? project.projectName : `Project ID: ${viewingCustomer.projectId}`;
+                }
+                if (viewingCustomer.projectName) {
+                  return viewingCustomer.projectName;
+                }
+                return '-';
+              })()}
+            </Descriptions.Item>
             <Descriptions.Item label="งบประมาณ">{viewingCustomer.budget ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(viewingCustomer.budget) : '-'}</Descriptions.Item>
-            <Descriptions.Item label="วันที่ลงทะเบียน">{new Date(viewingCustomer.registrationDate).toLocaleDateString('th-TH')}</Descriptions.Item>
+            <Descriptions.Item label="วันที่ลงทะเบียน">
+              {(viewingCustomer.createdAt || viewingCustomer.created_at) ?
+                new Date(viewingCustomer.createdAt || viewingCustomer.created_at).toLocaleDateString('th-TH') : '-'}
+            </Descriptions.Item>
             <Descriptions.Item label="เลขประจำตัวประชาชน" span={2}>{viewingCustomer.idCard}</Descriptions.Item>
             <Descriptions.Item label="เอเจนต์ที่รับผิดชอบ" span={2}>
               {viewingCustomer.agent ? `${viewingCustomer.agent.agentCode} - ${viewingCustomer.agent.firstName}` : '-'}

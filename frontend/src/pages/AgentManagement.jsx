@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { 
-  Card, 
-  Table, 
-  Button, 
-  Space, 
-  Modal, 
-  Form, 
-  Input, 
-  Select, 
-  Row, 
+import {
+  Card,
+  Table,
+  Button,
+  Space,
+  Modal,
+  Form,
+  Input,
+  Select,
+  Row,
   Col,
   Typography,
   Tag,
-  notification,
   Popconfirm,
-  Tooltip
+  Tooltip,
+  notification
 } from 'antd';
 import { 
   PlusOutlined, 
@@ -105,15 +105,15 @@ const AgentManagement = () => {
     },
     {
       title: 'อีเมล',
-      dataIndex: 'email',
+      dataIndex: ['User', 'email'],
       key: 'email',
       width: 200,
-      render: (text) => (
+      render: (text) => text ? (
         <Space>
           <MailOutlined />
           <span>{text}</span>
         </Space>
-      )
+      ) : '-'
     },
     {
       title: 'เบอร์โทร',
@@ -259,7 +259,7 @@ const AgentManagement = () => {
       agentCode: agent.agentCode,
       firstName: agent.firstName,
       lastName: agent.lastName,
-      email: agent.email,
+      email: agent.User?.email || agent.email, // Support both nested and direct email
       phone: agent.phone,
       idCard: agent.idCard,
       status: agent.status,
@@ -269,7 +269,9 @@ const AgentManagement = () => {
 
   // Handle view agent details
   const handleView = (agent) => {
-    setViewingAgent(agent);
+    // Ensure we have the full agent object with User data from the agents array
+    const fullAgent = agents.find(a => a.id === agent.id) || agent;
+    setViewingAgent(fullAgent);
     setIsViewModalVisible(true);
   };
 
@@ -302,8 +304,8 @@ const AgentManagement = () => {
       });
     } catch (error) {
       notification.error({
-        message: 'เกิดข้อผิดพลาด',
-        description: error || 'ไม่สามารถลบเอเจนต์ได้',
+        message: 'ไม่สามารถลบเอเจนต์ได้',
+        description: error || 'เกิดข้อผิดพลาดในการลบเอเจนต์',
       });
     }
   };
@@ -322,8 +324,12 @@ const AgentManagement = () => {
           description: 'อัพเดทข้อมูลเอเจนต์สำเร็จ',
         });
       } else {
-        // Create new agent
-        await dispatch(createAgent(values)).unwrap();
+        // Create new agent - use idCard as password
+        const agentData = {
+          ...values,
+          password: values.idCard // ใช้หมายเลขบัตรประชาชนเป็นรหัสผ่าน
+        };
+        await dispatch(createAgent(agentData)).unwrap();
         notification.success({
           message: 'สำเร็จ',
           description: 'เพิ่มเอเจนต์สำเร็จ',
@@ -332,9 +338,29 @@ const AgentManagement = () => {
       setIsModalVisible(false);
       form.resetFields();
     } catch (error) {
+      // Check for specific duplicate validation errors
+      const errorMessage = error || 'ไม่สามารถบันทึกข้อมูลได้';
+
+      let alertMessage = 'เกิดข้อผิดพลาด';
+      let alertDescription = errorMessage;
+
+      // Customize alert based on error type
+      if (errorMessage.includes('อีเมลนี้ถูกใช้แล้ว')) {
+        alertMessage = '🚫 อีเมลซ้ำในระบบ';
+        alertDescription = 'อีเมลนี้ถูกใช้งานแล้ว กรุณาใช้อีเมลอื่น';
+      } else if (errorMessage.includes('เลขบัตรประชาชนนี้ถูกใช้แล้ว')) {
+        alertMessage = '🚫 เลขบัตรประชาชนซ้ำในระบบ';
+        alertDescription = 'เลขบัตรประชาชนนี้ถูกใช้งานแล้ว กรุณาตรวจสอบข้อมูล';
+      } else if (errorMessage.includes('เบอร์โทรศัพท์นี้ถูกใช้แล้ว')) {
+        alertMessage = '🚫 เบอร์โทรศัพท์ซ้ำในระบบ';
+        alertDescription = 'เบอร์โทรศัพท์นี้ถูกใช้งานแล้ว กรุณาใช้เบอร์อื่น';
+      }
+
       notification.error({
-        message: 'เกิดข้อผิดพลาด',
-        description: error || 'ไม่สามารถบันทึกข้อมูลได้',
+        message: alertMessage,
+        description: alertDescription,
+        duration: 6, // แสดงนานขึ้น 6 วินาที
+        placement: 'topRight'
       });
     }
   };
@@ -485,15 +511,17 @@ const AgentManagement = () => {
             name="email"
             label="อีเมล"
             rules={[
-              { required: true, message: 'กรุณาใส่อีเมล' },
+              { required: !editingAgent, message: 'กรุณาใส่อีเมล' },
               { type: 'email', message: 'รูปแบบอีเมลไม่ถูกต้อง' }
             ]}
+            hasFeedback
           >
-            <Input 
-              placeholder="example@email.com" 
+            <Input
+              placeholder="example@email.com"
               disabled={!!editingAgent}
             />
           </Form.Item>
+
 
           <Row gutter={16}>
             <Col xs={24} sm={12}>
@@ -503,6 +531,7 @@ const AgentManagement = () => {
                 rules={[
                   { pattern: /^[0-9-]+$/, message: 'เบอร์โทรควรเป็นตัวเลขและขีดกลางเท่านั้น' }
                 ]}
+                hasFeedback
               >
                 <Input placeholder="081-234-5678" />
               </Form.Item>
@@ -524,14 +553,16 @@ const AgentManagement = () => {
           <Form.Item
             name="idCard"
             label="เลขประจำตัวประชาชน"
+            extra={!editingAgent ? "หมายเลขนี้จะใช้เป็นรหัสผ่านสำหรับเข้าสู่ระบบ" : undefined}
             rules={[
               { required: true, message: 'กรุณาใส่เลขประจำตัวประชาชน' },
               { len: 13, message: 'เลขประจำตัวประชาชนต้องมี 13 หลัก' },
               { pattern: /^[0-9]+$/, message: 'เลขประจำตัวประชาชนควรเป็นตัวเลขเท่านั้น' }
             ]}
+            hasFeedback
           >
-            <Input 
-              placeholder="1234567890123" 
+            <Input
+              placeholder="1234567890123"
               maxLength={13}
               disabled={!!editingAgent}
             />
@@ -599,7 +630,7 @@ const AgentManagement = () => {
             </Row>
 
             <Form.Item label="อีเมล">
-              <Typography.Text strong>{viewingAgent.email}</Typography.Text>
+              <Typography.Text strong>{viewingAgent.User?.email || viewingAgent.email || '-'}</Typography.Text>
             </Form.Item>
 
             <Row gutter={16}>

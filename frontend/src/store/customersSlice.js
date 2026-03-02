@@ -6,9 +6,12 @@ export const fetchCustomers = createAsyncThunk(
   'customers/fetchCustomers',
   async (params = {}, { rejectWithValue }) => {
     try {
+      console.log('=== fetchCustomers thunk called ===', params);
       const response = await customersAPI.getAll(params);
+      console.log('=== fetchCustomers response ===', response);
       return response;
     } catch (error) {
+      console.error('=== fetchCustomers error ===', error);
       return rejectWithValue(error.message);
     }
   }
@@ -120,8 +123,10 @@ const customersSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchCustomers.fulfilled, (state, action) => {
+        console.log('=== fetchCustomers.fulfilled ===', action.payload);
         state.loading = false;
         state.customers = action.payload.data;
+        console.log('=== state.customers updated ===', state.customers);
         if (action.payload.pagination) {
           state.pagination = action.payload.pagination;
         }

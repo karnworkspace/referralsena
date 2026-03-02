@@ -2,10 +2,12 @@
   "name": "referral-system-backend",
   "version": "1.0.0",
   "description": "Agent Referral System Backend API",
-  "main": "server.js",
+  "main": "server-mysql.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "node server-mysql.js",
+    "dev": "nodemon server-mysql.js",
+    "start:mock": "node server.js",
+    "dev:mock": "nodemon server.js",
     "test": "jest",
     "db:migrate": "node scripts/migrate.js",
     "db:seed": "node scripts/seed.js"

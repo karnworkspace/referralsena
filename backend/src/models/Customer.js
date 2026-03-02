@@ -62,11 +62,8 @@ const Customer = sequelize.define('Customer', {
     field: 'budget_max'
   },
   status: {
-    type: DataTypes.ENUM(
-      'new', 'contacted', 'interested', 'visit_scheduled', 
-      'visited', 'negotiating', 'closed_won', 'closed_lost', 'pending'
-    ),
-    defaultValue: 'new'
+    type: DataTypes.ENUM('pending', 'duplicate', 'approved'),
+    defaultValue: 'pending'
   },
   source: {
     type: DataTypes.ENUM('referral', 'walk_in', 'online', 'phone', 'other'),

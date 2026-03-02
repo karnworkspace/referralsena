@@ -68,6 +68,7 @@ export const agentsAPI = {
   update: (id, agentData) => api.put(`/agents/${id}`, agentData),
   delete: (id) => api.delete(`/agents/${id}`),
   getList: () => api.get('/agents/list'),
+  getNextCode: () => api.get('/agents/next-code'),
 };
 
 // Customers API
@@ -78,6 +79,7 @@ export const customersAPI = {
   update: (id, customerData) => api.put(`/customers/${id}`, customerData),
   delete: (id) => api.delete(`/customers/${id}`),
   approve: (id) => api.put(`/customers/${id}/approve`),
+  getNextCode: () => api.get('/customers/next-code'),
 };
 
 // Projects API
@@ -87,6 +89,12 @@ export const projectsAPI = {
   create: (projectData) => api.post('/projects', projectData),
   update: (id, projectData) => api.put(`/projects/${id}`, projectData),
   delete: (id) => api.delete(`/projects/${id}`),
+};
+
+// Dashboard API
+export const dashboardAPI = {
+  getStats: () => api.get('/dashboard/stats'),
+  getRecentActivities: () => api.get('/dashboard/recent-activities'),
 };
 
 // Health check
